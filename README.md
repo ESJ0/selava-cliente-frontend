@@ -66,4 +66,19 @@ entrega una sesión real.
 - `styles/`, `test/`: identidad visual y preparación de las pruebas.
 
 El módulo del catálogo está listo para SEL-95; la Home no solicita ni muestra
-precios. No se implementan SEL-95, SEL-96, SEL-97, SEL-98, SEL-100 ni SEL-101.
+precios. No se implementan SEL-95, SEL-96, SEL-97, SEL-100 ni SEL-101.
+
+## Responsive (SEL-98)
+
+El CSS usa móvil hasta 639px, tablet de 640 a 1023px y desktop desde 1024px.
+En móvil, los cuatro enlaces permanecen visibles en una fila compacta con iconos;
+logo y acciones de sesión conservan áreas táctiles de al menos 44px. Hero, cards
+y placeholders ocupan el ancho disponible, con padding de 16px y CTA de ancho
+completo. Los textos largos se ajustan sin ocultar contenido ni el overflow global.
+
+Esta historia se inició desde `feature/sel-94-home-cliente` (`b04a4b0`), porque
+SEL-94 estaba pendiente. Durante el trabajo, el PR #1 se integró a `main`
+(`d9b7162`); el PR de SEL-98 hacia `main` contiene únicamente sus cambios propios.
+SEL-95/96/97 no están disponibles; no se agregan sus contenidos ni formularios,
+pagos o timelines.
+La validación del responsive actual no sustituye las pruebas formales de SEL-100.
