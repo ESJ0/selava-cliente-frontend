@@ -79,4 +79,19 @@ describe('Home SEL-94', () => {
     await user.tab()
     expect(screen.getByRole('link', { name: 'Inicio' })).toHaveFocus()
   })
+
+  it.each([
+    ['Mis pedidos', 'Mis pedidos'],
+    ['Pagos', 'Mis pagos'],
+    ['Mi perfil', 'Mi perfil'],
+  ])('permite navegar por teclado a %s sin ocultar el destino', async (label, title) => {
+    const user = userEvent.setup()
+    renderPortal()
+    const link = screen.getByRole('link', { name: label })
+    for (let step = 0; step < 8 && document.activeElement !== link; step++) await user.tab()
+    expect(link).toHaveFocus()
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
+    expect(link).toHaveAttribute('aria-current', 'page')
+  })
 })
