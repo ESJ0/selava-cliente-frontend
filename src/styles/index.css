@@ -162,6 +162,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .about-accent { min-height: 330px; display: grid; place-items: center; border-radius: 36px; color: #007fae; background: radial-gradient(circle at 30% 30%, #fff 0 6%, transparent 7%), linear-gradient(140deg, #eafaff, #99e7f9); }
 .about-accent svg { width: 70px; height: 70px; }
 .about-section > div:last-child > p { margin-top: 22px; color: #547387; font-size: 17px; line-height: 1.75; }
+.about-description { white-space: pre-line; }
 .pending-content { margin-top: 24px; padding: 20px; border-left: 4px solid var(--yellow); border-radius: 4px 14px 14px 4px; background: #fffbee; }
 .pending-content strong { display: block; margin-bottom: 5px; }
 .pending-content p { color: #667b86; font-size: 14px; line-height: 1.65; }

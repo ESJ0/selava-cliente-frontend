@@ -30,7 +30,7 @@ export function LandingPage() {
           <div>
             <span className="public-eyebrow">Sobre nosotros</span>
             <h2 id="about-title">{about.title}</h2>
-            {about.description ? <p>{about.description}</p> : <div className="pending-content"><strong>Historia en preparación</strong><p>Próximamente compartiremos la historia de SeLava y aquello que hace especial nuestro servicio.</p></div>}
+            {about.description ? <p className="about-description">{about.description}</p> : <div className="pending-content"><strong>Historia en preparación</strong><p>Próximamente compartiremos la historia de SeLava y aquello que hace especial nuestro servicio.</p></div>}
           </div>
         </section>
         <section id="contacto" className="public-section contact-section" aria-labelledby="contact-title">
@@ -46,7 +46,7 @@ export function LandingPage() {
               {contact.address && <div className="contact-item"><MapPin aria-hidden="true" /><div><strong>Dirección</strong><span>{contact.address}</span></div></div>}
             </div>
           ) : <div className="pending-content contact-pending"><MapPin size={28} aria-hidden="true" /><div><strong>Información en preparación</strong><p>El teléfono, horario, dirección y mapa estarán disponibles próximamente.</p></div></div>}
-          {contact.mapEmbedUrl && <iframe className="location-map" src={contact.mapEmbedUrl} title="Ubicación de SeLava" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />}
+          {contact.mapEmbedUrl && <iframe className="location-map" src={contact.mapEmbedUrl} title="Ubicación de SeLava en Centro San Juan" loading="lazy" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
         </section>
       </main>
       <footer className="public-footer">

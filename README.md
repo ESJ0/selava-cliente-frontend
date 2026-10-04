@@ -37,11 +37,11 @@ La sección pública de servicios consume `GET /api/public/servicios` sin enviar
 JWT. El servidor de despliegue debe redirigir las rutas del frontend a
 `index.html` para admitir enlaces directos con `BrowserRouter`.
 
-## Contenido pendiente
+## Contenido público
 
-La historia, el teléfono, el horario, la dirección y el mapa están pendientes de
-la información oficial de la lavandería. Se reemplazan en
-`src/content/publicSite.ts`; la interfaz no presenta datos comerciales inventados.
+La historia, el teléfono, el horario, la dirección y la URL del mapa se mantienen
+centralizados en `src/content/publicSite.ts`. Los servicios y precios proceden
+siempre del endpoint público y no se duplican en el frontend.
 
 El login real también está pendiente de soporte backend para clientes. La ruta
 `/login` no muestra un formulario ni solicita credenciales hasta que exista un

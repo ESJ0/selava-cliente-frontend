@@ -26,8 +26,7 @@ no modifica el encabezado ni las pantallas del portal existente.
 
 ## Contenido editable
 
-Los datos comerciales pendientes están centralizados en
-`src/content/publicSite.ts`. Al recibir la información real se deben reemplazar:
+Los datos comerciales están centralizados en `src/content/publicSite.ts`:
 
 - `about.description`;
 - `contact.phone`;
@@ -65,4 +64,3 @@ la versión final en:
 En cada combinación comprobar: navegación por teclado, enlace de inicio de sesión,
 anclas internas, carga/error/reintento del catálogo, textos largos, zoom al 200 %,
 orientación horizontal y ausencia de desplazamiento horizontal.
-
