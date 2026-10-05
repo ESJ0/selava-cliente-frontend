@@ -43,11 +43,11 @@ describe('Home SEL-94', () => {
     expect(screen.getByRole('heading', { name: /Bienvenido a SeLava/ })).toBeInTheDocument()
   })
 
-  it('redirige la raíz a Inicio y permite abrir directamente /inicio', () => {
-    renderPortal('/')
+  it('permite abrir directamente el portal existente en /inicio', () => {
+    renderPortal('/inicio')
     expect(screen.getByRole('heading', { name: /Bienvenido a SeLava/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page')
-    expect(document.title).toBe('Inicio | SeLava')
+    expect(document.title).toBe('Portal de clientes | SeLava')
   })
 
   it('prepara saludo, avatar y CTA personal para una futura sesión real', () => {
