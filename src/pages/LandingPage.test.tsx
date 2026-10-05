@@ -15,11 +15,13 @@ function renderSite(path = '/') {
 beforeEach(() => getPublicServicesMock.mockReset())
 
 describe('sitio público', () => {
-  it('muestra la landing en la raíz y enlaza el acceso de clientes', async () => {
+  it('muestra primero la landing y abre el Home al pulsar Iniciar sesión', async () => {
+    const user = userEvent.setup()
     getPublicServicesMock.mockResolvedValue([])
     renderSite()
     expect(screen.getByRole('heading', { name: 'Tu ropa limpia, cuidada y lista cuando la necesitas.' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/login')
+    expect(screen.queryByRole('heading', { name: /Bienvenido a SeLava/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/inicio')
     expect(screen.getByRole('heading', { name: 'Nuestros servicios y precios' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Una lavandería pensada para cuidar cada detalle' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Contacto y ubicación' })).toBeInTheDocument()
@@ -30,6 +32,10 @@ describe('sitio público', () => {
     expect(screen.getByTitle('Ubicación de SeLava en Centro San Juan')).toHaveAttribute('src', expect.stringContaining('google.com/maps/embed'))
     expect(await screen.findByRole('heading', { name: 'El catálogo se está actualizando' })).toBeInTheDocument()
     expect(document.title).toBe('Inicio | SeLava')
+    await user.click(screen.getByRole('link', { name: 'Iniciar sesión' }))
+    expect(screen.getByRole('heading', { name: /Bienvenido a SeLava/ })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeInTheDocument()
+    expect(document.title).toBe('Portal de clientes | SeLava')
   })
 
   it('presenta el catálogo público con precios y tiempo estimado', async () => {
@@ -56,11 +62,11 @@ describe('sitio público', () => {
     expect(await screen.findByRole('heading', { name: 'El catálogo se está actualizando' })).toBeInTheDocument()
   })
 
-  it('abre una pantalla honesta mientras la autenticación está pendiente', () => {
+  it('redirige los enlaces anteriores de /login al Home de clientes', () => {
     getPublicServicesMock.mockResolvedValue([])
     renderSite('/login')
-    expect(screen.getByRole('heading', { name: 'Acceso de clientes' })).toBeInTheDocument()
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Volver al sitio público' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('heading', { name: /Bienvenido a SeLava/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page')
+    expect(document.title).toBe('Portal de clientes | SeLava')
   })
 })

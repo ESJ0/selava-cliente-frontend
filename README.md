@@ -28,10 +28,13 @@ este origen, por ejemplo:
 ## Rutas principales
 
 - `/`: Landing Page pública.
-- `/login`: pantalla provisional de acceso de clientes.
+- `/login`: redirección a `/inicio` para enlaces anteriores.
 - `/inicio`: Home preexistente del portal de clientes.
 - `/mis-pedidos`, `/pagos`, `/mi-perfil` y `/servicios`: rutas preparadas del
   portal de clientes.
+
+La entrada principal `/` muestra primero la landing. Su botón **Iniciar sesión**
+abre directamente el Home de clientes en `/inicio`.
 
 La sección pública de servicios consume `GET /api/public/servicios` sin enviar
 JWT. El servidor de despliegue debe redirigir las rutas del frontend a
@@ -43,9 +46,8 @@ La historia, el teléfono, el horario, la dirección y la URL del mapa se mantie
 centralizados en `src/content/publicSite.ts`. Los servicios y precios proceden
 siempre del endpoint público y no se duplican en el frontend.
 
-El login real también está pendiente de soporte backend para clientes. La ruta
-`/login` no muestra un formulario ni solicita credenciales hasta que exista un
-contrato de autenticación válido.
+El login real sigue pendiente de soporte backend para clientes. El acceso actual
+al Home es público y no solicita credenciales ni crea una sesión.
 
 ## Validación
 

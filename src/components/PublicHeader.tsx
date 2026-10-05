@@ -16,7 +16,7 @@ export function PublicHeader() {
         <nav className="public-navigation" aria-label="Navegación del sitio público">
           {links.map(({ href, label }) => <a key={href} href={href}>{label}</a>)}
         </nav>
-        <Link className="login-link" to="/login"><LogIn size={17} aria-hidden="true" />Iniciar sesión</Link>
+        <Link className="login-link" to="/inicio"><LogIn size={17} aria-hidden="true" />Iniciar sesión</Link>
       </div>
     </header>
   )

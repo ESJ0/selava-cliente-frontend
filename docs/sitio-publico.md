@@ -5,24 +5,26 @@
 | Ruta | Propósito | Diseño |
 | --- | --- | --- |
 | `/` | Landing pública con información comercial | `LandingPage` y `PublicHeader` |
-| `/login` | Destino provisional del botón **Iniciar sesión** | `LoginPage` |
+| `/login` | Redirección a `/inicio` para enlaces anteriores | `LoginPage` |
 | `/inicio` | Portal de clientes preexistente | `ClientLayout` y `HomePage` |
 | `/mis-pedidos`, `/pagos`, `/mi-perfil`, `/servicios` | Rutas preexistentes del portal | `ClientLayout` |
 
-La Landing y el acceso no usan `ClientLayout`, de modo que su navegación comercial
-no modifica el encabezado ni las pantallas del portal existente.
+La entrada principal `/` muestra la landing con navegación comercial. El botón
+**Iniciar sesión** abre directamente `/inicio`, que usa `ClientLayout` y muestra
+el Home de clientes. Este acceso es público; la autenticación real sigue pendiente
+de soporte backend.
 
 ## Secciones y componentes
 
-- `PublicHeader`: logotipo, enlaces internos a las secciones y acceso a `/login`.
+- `PublicHeader`: logotipo, enlaces internos a las secciones y acceso a `/inicio`.
 - Hero de `LandingPage`: propuesta general y llamada a ver el catálogo.
 - `PublicServicesSection`: consume `GET /api/public/servicios` sin autenticación.
   Incluye carga, catálogo vacío, error, reintento y tarjetas con precio base.
 - Sobre nosotros: estructura terminada; el texto definitivo está pendiente.
 - Contacto y ubicación: admite teléfono, horario, dirección y mapa embebido.
 - Footer: navegación secundaria a las secciones públicas.
-- `LoginPage`: comunica que la autenticación aún no está disponible; no solicita
-  credenciales ni simula un inicio de sesión.
+- `LoginPage`: redirige `/login` a `/inicio` sin añadir una pantalla intermedia al
+  historial ni crear una sesión.
 
 ## Contenido editable
 
