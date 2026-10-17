@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import type { ClientSession } from '../types/session'
 
 interface SessionState {
@@ -7,10 +8,16 @@ interface SessionState {
   clearSession: () => void
 }
 
-// Sin persistencia ni credenciales de demostracion. Ninguna pantalla inicia
-// sesion hasta que exista soporte de autenticacion de clientes en backend.
-export const useClientSession = create<SessionState>((set) => ({
-  session: null,
-  setSession: (session) => set({ session }),
-  clearSession: () => set({ session: null }),
-}))
+// sessionStorage mantiene la sesión únicamente durante la pestaña actual. La
+// contraseña nunca forma parte del estado ni del almacenamiento del navegador.
+export const useClientSession = create<SessionState>()(persist(
+  (set) => ({
+    session: null,
+    setSession: (session) => set({ session }),
+    clearSession: () => set({ session: null }),
+  }),
+  {
+    name: 'selava-client-session',
+    storage: createJSONStorage(() => sessionStorage),
+  },
+))
