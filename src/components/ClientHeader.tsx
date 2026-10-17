@@ -14,6 +14,10 @@ export function ClientHeader() {
   const session = useClientSession((state) => state.session)
   const clearSession = useClientSession((state) => state.clearSession)
   const navigate = useNavigate()
+  const fullName = [session?.customer.nombre, session?.customer.apellido].filter(Boolean).join(' ')
+  const initials = fullName
+    ? fullName.split(' ').slice(0, 2).map((part) => part.charAt(0)).join('')
+    : session?.customer.email?.charAt(0).toUpperCase() ?? 'C'
 
   return (
     <header className="client-header">
@@ -28,10 +32,10 @@ export function ClientHeader() {
         </nav>
         {session && (
           <div className="session-actions">
-            <Link to="/mi-perfil" className="avatar" aria-label={`Perfil de ${session.customer.nombre} ${session.customer.apellido}`}>
-              {session.customer.nombre.charAt(0)}{session.customer.apellido.charAt(0)}
+            <Link to="/mi-perfil" className="avatar" aria-label={`Perfil de ${fullName || 'cliente'}`}>
+              {initials}
             </Link>
-            <button className="icon-button" aria-label="Cerrar sesión" onClick={() => { clearSession(); navigate('/inicio') }}>
+            <button className="icon-button" aria-label="Cerrar sesión" onClick={() => { clearSession(); navigate('/login') }}>
               <LogOut size={17} aria-hidden="true" />
             </button>
           </div>

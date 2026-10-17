@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getPublicServices } from '../api/publicServices'
 import { AppRoutes } from '../routes/AppRoutes'
+import { useClientSession } from '../store/session'
 
 vi.mock('../api/publicServices', () => ({ getPublicServices: vi.fn() }))
 const getPublicServicesMock = vi.mocked(getPublicServices)
@@ -12,16 +13,20 @@ function renderSite(path = '/') {
   return render(<MemoryRouter initialEntries={[path]}><AppRoutes /></MemoryRouter>)
 }
 
-beforeEach(() => getPublicServicesMock.mockReset())
+beforeEach(() => {
+  getPublicServicesMock.mockReset()
+  useClientSession.getState().clearSession()
+  sessionStorage.clear()
+})
 
 describe('sitio público', () => {
-  it('muestra primero la landing y abre el Home al pulsar Iniciar sesión', async () => {
+  it('muestra primero la landing y abre el formulario al pulsar Iniciar sesión', async () => {
     const user = userEvent.setup()
     getPublicServicesMock.mockResolvedValue([])
     renderSite()
     expect(screen.getByRole('heading', { name: 'Tu ropa limpia, cuidada y lista cuando la necesitas.' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Bienvenido a SeLava/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/inicio')
+    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/login')
     expect(screen.getByRole('heading', { name: 'Nuestros servicios y precios' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Una lavandería pensada para cuidar cada detalle' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Contacto y ubicación' })).toBeInTheDocument()
@@ -33,9 +38,9 @@ describe('sitio público', () => {
     expect(await screen.findByRole('heading', { name: 'El catálogo se está actualizando' })).toBeInTheDocument()
     expect(document.title).toBe('Inicio | SeLava')
     await user.click(screen.getByRole('link', { name: 'Iniciar sesión' }))
-    expect(screen.getByRole('heading', { name: /Bienvenido a SeLava/ })).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeInTheDocument()
-    expect(document.title).toBe('Portal de clientes | SeLava')
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Crear una cuenta' })).toHaveAttribute('href', '/registro')
+    expect(document.title).toBe('Iniciar sesión | SeLava')
   })
 
   it('presenta el catálogo público con precios y tiempo estimado', async () => {
@@ -62,11 +67,12 @@ describe('sitio público', () => {
     expect(await screen.findByRole('heading', { name: 'El catálogo se está actualizando' })).toBeInTheDocument()
   })
 
-  it('redirige los enlaces anteriores de /login al Home de clientes', () => {
+  it('presenta el formulario real al abrir /login', () => {
     getPublicServicesMock.mockResolvedValue([])
     renderSite('/login')
-    expect(screen.getByRole('heading', { name: /Bienvenido a SeLava/ })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page')
-    expect(document.title).toBe('Portal de clientes | SeLava')
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument()
+    expect(screen.getByLabelText('Contraseña')).toBeInTheDocument()
+    expect(document.title).toBe('Iniciar sesión | SeLava')
   })
 })
