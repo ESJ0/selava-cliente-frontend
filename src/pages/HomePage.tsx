@@ -5,10 +5,11 @@ import { useClientSession } from '../store/session'
 
 export function HomePage() {
   const session = useClientSession((state) => state.session)
+  const greeting = session?.customer.nombre ? `Hola, ${session.customer.nombre}` : session ? 'Hola de nuevo' : 'Bienvenido a SeLava'
   return (
     <div className="home-page">
       <div className="page-heading">
-        <h1>{session ? `Hola, ${session.customer.nombre}` : 'Bienvenido a SeLava'} <span aria-hidden="true">👋</span></h1>
+        <h1>{greeting} <span aria-hidden="true">👋</span></h1>
         <p>{session ? 'Así va tu ropa.' : 'Cuidamos tu ropa, tú disfrutas tu día.'}</p>
       </div>
       <HomeHero hasSession={Boolean(session)} />

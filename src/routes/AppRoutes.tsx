@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { ClientLayout } from '../layouts/ClientLayout'
+import { ProtectedClientRoute } from '../components/ProtectedClientRoute'
 import { HomePage } from '../pages/HomePage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { RegisterPage } from '../pages/RegisterPage'
 import { UpcomingPage } from '../pages/UpcomingPage'
 
 const upcoming = [
@@ -18,6 +20,7 @@ const standaloneTitles: Record<string, string> = {
   '/': 'Inicio',
   '/inicio': 'Portal de clientes',
   '/login': 'Iniciar sesión',
+  '/registro': 'Crear cuenta',
 }
 
 export function AppRoutes() {
@@ -30,10 +33,13 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route element={<ClientLayout />}>
-        <Route path="/inicio" element={<HomePage />} />
-        {upcoming.map(({ path, title, description }) => <Route key={path} path={path} element={<UpcomingPage title={title} description={description} />} />)}
-        <Route path="*" element={<NotFoundPage />} />
+      <Route path="/registro" element={<RegisterPage />} />
+      <Route element={<ProtectedClientRoute />}>
+        <Route element={<ClientLayout />}>
+          <Route path="/inicio" element={<HomePage />} />
+          {upcoming.map(({ path, title, description }) => <Route key={path} path={path} element={<UpcomingPage title={title} description={description} />} />)}
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Route>
     </Routes>
   )
