@@ -5,26 +5,29 @@
 | Ruta | Propósito | Diseño |
 | --- | --- | --- |
 | `/` | Landing pública con información comercial | `LandingPage` y `PublicHeader` |
-| `/login` | Redirección a `/inicio` para enlaces anteriores | `LoginPage` |
-| `/inicio` | Portal de clientes preexistente | `ClientLayout` y `HomePage` |
+| `/login` | Inicio de sesión de clientes | `LoginPage` |
+| `/registro` | Registro de perfil y credenciales | `RegisterPage` |
+| `/inicio` | Portal privado de clientes | `ProtectedClientRoute`, `ClientLayout` y `HomePage` |
 | `/mis-pedidos`, `/pagos`, `/mi-perfil`, `/servicios` | Rutas preexistentes del portal | `ClientLayout` |
 
 La entrada principal `/` muestra la landing con navegación comercial. El botón
-**Iniciar sesión** abre directamente `/inicio`, que usa `ClientLayout` y muestra
-el Home de clientes. Este acceso es público; la autenticación real sigue pendiente
-de soporte backend.
+**Iniciar sesión** abre `/login`. Al autenticar, el cliente recibe un JWT que se
+comprueba con la ruta privada de identidad antes de abrir `/inicio`. Las rutas del
+portal usan `ProtectedClientRoute` y devuelven al login cuando no hay sesión.
 
 ## Secciones y componentes
 
-- `PublicHeader`: logotipo, enlaces internos a las secciones y acceso a `/inicio`.
+- `PublicHeader`: logotipo, enlaces internos a las secciones y acceso a `/login`.
 - Hero de `LandingPage`: propuesta general y llamada a ver el catálogo.
 - `PublicServicesSection`: consume `GET /api/public/servicios` sin autenticación.
   Incluye carga, catálogo vacío, error, reintento y tarjetas con precio base.
 - Sobre nosotros: estructura terminada; el texto definitivo está pendiente.
 - Contacto y ubicación: admite teléfono, horario, dirección y mapa embebido.
 - Footer: navegación secundaria a las secciones públicas.
-- `LoginPage`: redirige `/login` a `/inicio` sin añadir una pantalla intermedia al
-  historial ni crear una sesión.
+- `LoginPage`: valida credenciales, muestra carga y errores, verifica el JWT y
+  crea la sesión del cliente.
+- `RegisterPage`: valida el perfil y las credenciales, traduce errores del backend
+  y conduce al login cuando la cuenta se crea correctamente.
 
 ## Contenido editable
 
