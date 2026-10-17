@@ -31,8 +31,9 @@ este origen, por ejemplo:
 - `/login`: formulario de inicio de sesión conectado a la API de clientes.
 - `/registro`: formulario para crear el perfil y la cuenta de cliente.
 - `/inicio`: Home privado del portal de clientes.
-- `/mis-pedidos`, `/pagos`, `/mi-perfil` y `/servicios`: rutas preparadas del
-  portal de clientes.
+- `/mis-pedidos`: listado de pedidos propios; cada pedido abre su detalle y
+  seguimiento cronológico.
+- `/pagos`, `/mi-perfil` y `/servicios`: rutas preparadas del portal de clientes.
 
 La entrada principal `/` muestra primero la landing. Su botón **Iniciar sesión**
 abre `/login`; las rutas del portal redirigen allí cuando no existe una sesión.
@@ -52,6 +53,10 @@ El registro consume `POST /api/auth/clientes/registro`. El login usa
 `GET /api/cliente/me` antes de guardar la sesión. El token se conserva en
 `sessionStorage`, por lo que se elimina al cerrar la pestaña; las contraseñas
 nunca se almacenan.
+
+Los pedidos consumen exclusivamente las rutas privadas `/api/cliente/pedidos`.
+El listado, detalle, historial y tarjeta de pedido activo incluyen estados de
+carga, vacío y error, y nunca envían un `cliente_id` desde el navegador.
 
 ## Validación
 
