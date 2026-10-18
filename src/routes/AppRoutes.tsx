@@ -6,11 +6,12 @@ import { HomePage } from '../pages/HomePage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { OrderDetailPage } from '../pages/OrderDetailPage'
+import { OrdersPage } from '../pages/OrdersPage'
 import { RegisterPage } from '../pages/RegisterPage'
 import { UpcomingPage } from '../pages/UpcomingPage'
 
 const upcoming = [
-  { path: '/mis-pedidos', title: 'Mis pedidos', description: 'Pronto podrás consultar el seguimiento de tus pedidos al acceder a tu cuenta.' },
   { path: '/pagos', title: 'Mis pagos', description: 'Pronto podrás consultar los pagos de tus pedidos al acceder a tu cuenta.' },
   { path: '/mi-perfil', title: 'Mi perfil', description: 'Pronto podrás consultar los datos de tu cuenta.' },
   { path: '/servicios', title: 'Nuestros servicios', description: 'Pronto podrás conocer nuestro catálogo y encontrar el cuidado que tus prendas necesitan.' },
@@ -26,7 +27,11 @@ const standaloneTitles: Record<string, string> = {
 export function AppRoutes() {
   const { pathname } = useLocation()
   useEffect(() => {
-    const title = upcoming.find((page) => page.path === pathname)?.title ?? standaloneTitles[pathname] ?? 'Página no encontrada'
+    const title = pathname.startsWith('/mis-pedidos/')
+      ? 'Detalle del pedido'
+      : pathname === '/mis-pedidos'
+        ? 'Mis pedidos'
+        : upcoming.find((page) => page.path === pathname)?.title ?? standaloneTitles[pathname] ?? 'Página no encontrada'
     document.title = `${title} | SeLava`
   }, [pathname])
   return (
@@ -37,6 +42,8 @@ export function AppRoutes() {
       <Route element={<ProtectedClientRoute />}>
         <Route element={<ClientLayout />}>
           <Route path="/inicio" element={<HomePage />} />
+          <Route path="/mis-pedidos" element={<OrdersPage />} />
+          <Route path="/mis-pedidos/:pedidoID" element={<OrderDetailPage />} />
           {upcoming.map(({ path, title, description }) => <Route key={path} path={path} element={<UpcomingPage title={title} description={description} />} />)}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
