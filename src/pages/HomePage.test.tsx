@@ -1,9 +1,13 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getOwnOrders } from '../api/orders'
 import { AppRoutes } from '../routes/AppRoutes'
 import { useClientSession } from '../store/session'
+
+vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn() }))
+const getOwnOrdersMock = vi.mocked(getOwnOrders)
 
 function renderPortal(path = '/inicio') {
   return render(<MemoryRouter initialEntries={[path]}><AppRoutes /></MemoryRouter>)
@@ -12,6 +16,7 @@ function renderPortal(path = '/inicio') {
 const testSession = { customer: { id: 7, nombre: 'Ana', apellido: 'Pérez', email: 'ana@example.com' }, token: 'test-session-only' }
 
 beforeEach(() => {
+  getOwnOrdersMock.mockReset().mockResolvedValue({ pedidos: [], total: 0, pagina: 1, limite: 100 })
   useClientSession.getState().clearSession()
   sessionStorage.clear()
 })
@@ -23,14 +28,14 @@ describe('Home SEL-94', () => {
     expect(screen.queryByRole('navigation', { name: 'Navegación principal' })).not.toBeInTheDocument()
   })
 
-  it('muestra propuesta y pedido vacío con una sesión válida', () => {
+  it('muestra propuesta y pedido vacío con una sesión válida', async () => {
     useClientSession.getState().setSession(testSession)
     renderPortal()
     expect(screen.getByRole('heading', { name: /Hola, Ana/ })).toBeInTheDocument()
     expect(screen.getByText('Así va tu ropa.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Tu ropa limpia, cuidada y lista cuando la necesitas.' })).toBeInTheDocument()
     expect(screen.getByText('Lavandería y Dry Clean')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'No tienes pedidos activos.' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'No tienes pedidos activos.' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
     expect(screen.queryByText(/SLV-0249|Q145|María/)).not.toBeInTheDocument()
   })
@@ -52,8 +57,8 @@ describe('Home SEL-94', () => {
     renderPortal()
     await user.click(screen.getByRole('link', { name: 'Ver mis pedidos' }))
     expect(screen.getByRole('heading', { name: 'Mis pedidos' })).toBeInTheDocument()
-    expect(screen.getByText('Próximamente')).toBeInTheDocument()
-    await user.click(screen.getByRole('link', { name: 'Volver al inicio' }))
+    expect(await screen.findByRole('heading', { name: 'Aún no tienes pedidos.' })).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: 'Inicio' }))
     expect(screen.getByRole('heading', { name: /Hola, Ana/ })).toBeInTheDocument()
   })
 
@@ -72,6 +77,20 @@ describe('Home SEL-94', () => {
     expect(screen.getByText('Así va tu ropa.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Perfil de Ana Pérez' })).toHaveTextContent('AP')
     expect(screen.getByRole('link', { name: 'Ver mis pedidos' })).toHaveAttribute('href', '/mis-pedidos')
+  })
+
+  it('conecta la tarjeta del Home con el pedido activo más reciente', async () => {
+    getOwnOrdersMock.mockResolvedValue({
+      pedidos: [
+        { id: 12, fecha_recibido: '2026-10-10T10:00:00Z', total: 45, estado_actual: { id: 2, nombre: 'Rackeado', orden: 2 } },
+        { id: 11, fecha_recibido: '2026-10-09T10:00:00Z', total: 30, estado_actual: { id: 3, nombre: 'Entregado', orden: 3 } },
+      ], total: 2, pagina: 1, limite: 100,
+    })
+    useClientSession.getState().setSession(testSession)
+    renderPortal()
+    expect(await screen.findByText('SLV-0012')).toBeInTheDocument()
+    expect(screen.getByText('Rackeado')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Ver detalle/ })).toHaveAttribute('href', '/mis-pedidos/12')
   })
 
   it('cierra la sesión y vuelve al formulario de acceso', async () => {
