@@ -38,14 +38,16 @@ este origen, por ejemplo:
 La entrada principal `/` muestra primero la landing. Su botón **Iniciar sesión**
 abre `/login`; las rutas del portal redirigen allí cuando no existe una sesión.
 
-La sección pública de servicios consume `GET /api/public/servicios` sin enviar
-JWT. El servidor de despliegue debe redirigir las rutas del frontend a
+La sección pública de precios consume `GET /api/public/tipos-prenda` sin enviar
+JWT. Presenta tipos activos con `id`, `nombre`, `descripcion` y `precio` en GTQ;
+los tipos pendientes de configurar se excluyen en el backend. Los servicios ya no
+se presentan como fuente de precio. Requiere backend SEL-107 con migración 023. El servidor de despliegue debe redirigir las rutas del frontend a
 `index.html` para admitir enlaces directos con `BrowserRouter`.
 
 ## Contenido público
 
 La historia, el teléfono, el horario, la dirección y la URL del mapa se mantienen
-centralizados en `src/content/publicSite.ts`. Los servicios y precios proceden
+centralizados en `src/content/publicSite.ts`. Los precios por tipo de prenda proceden
 siempre del endpoint público y no se duplican en el frontend.
 
 El registro consume `POST /api/auth/clientes/registro`. El login usa
@@ -55,6 +57,8 @@ El registro consume `POST /api/auth/clientes/registro`. El login usa
 nunca se almacenan.
 
 Los pedidos consumen exclusivamente las rutas privadas `/api/cliente/pedidos`.
+El detalle presenta el precio congelado de la prenda para SEL-107 y conserva los
+importes históricos por servicio cuando no existe esa instantánea.
 El listado, detalle, historial y tarjeta de pedido activo incluyen estados de
 carga, vacío y error, y nunca envían un `cliente_id` desde el navegador.
 
