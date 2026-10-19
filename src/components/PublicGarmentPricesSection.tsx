@@ -4,6 +4,7 @@ import { errorMessage } from '../api/client'
 import { getPublicGarmentTypes } from '../api/publicGarmentTypes'
 import type { PublicGarmentType } from '../types/publicGarmentType'
 import { Button } from './Button'
+import { chargeUnit } from '../utils/chargeMode'
 
 const priceFormatter = new Intl.NumberFormat('es-GT', {
   style: 'currency',
@@ -70,7 +71,7 @@ export function PublicGarmentPricesSection() {
               <h3>{garmentType.nombre}</h3>
               {garmentType.descripcion && <p>{garmentType.descripcion}</p>}
               <div className="service-meta">
-                <strong>{priceFormatter.format(garmentType.precio)}</strong>
+                <strong>{priceFormatter.format(garmentType.precio)} <span className="pricing-unit">por {chargeUnit(garmentType.modalidad_cobro)}</span></strong>
               </div>
             </article>
           ))}

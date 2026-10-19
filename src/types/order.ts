@@ -1,3 +1,5 @@
+import type { ChargeMode } from '../utils/chargeMode'
+
 export interface OrderStatus {
   id: number
   nombre: string
@@ -19,13 +21,16 @@ export interface OwnOrdersResponse {
   limite: number
 }
 
-export interface GarmentType { id: number; nombre: string; descripcion?: string }
+export interface GarmentType { id: number; nombre: string; descripcion?: string; precio?: number | null; modalidad_cobro?: ChargeMode }
 export interface ServiceInfo { id: number; nombre: string; descripcion?: string; precio_base: number; tiempo_estimado_horas?: number }
 export interface GarmentService { id: number; servicio_id: number; precio_aplicado: number; servicio?: ServiceInfo }
 export interface OrderGarment {
   id: number
   /** NULL/omitido conserva importes históricos por servicio. */
   precio_aplicado?: number | null
+  modalidad_cobro_aplicada?: ChargeMode | null
+  /** Subtotal de lectura devuelto por el backend; nunca se reconstruye en el navegador. */
+  subtotal?: number
   tipo_prenda_id: number
   tipo_prenda?: GarmentType
   descripcion?: string
