@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
 
 const links = [
-  { href: '#servicios', label: 'Servicios y precios' },
+  { href: '#precios', label: 'Precios por prenda' },
   { href: '#nosotros', label: 'Sobre nosotros' },
   { href: '#contacto', label: 'Contacto' },
 ]

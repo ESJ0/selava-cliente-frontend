@@ -1,6 +1,6 @@
 import { ArrowDown, Clock3, MapPin, Phone, ShieldCheck, Sparkles } from 'lucide-react'
 import { PublicHeader } from '../components/PublicHeader'
-import { PublicServicesSection } from '../components/PublicServicesSection'
+import { PublicGarmentPricesSection } from '../components/PublicGarmentPricesSection'
 import { publicSiteContent } from '../content/publicSite'
 
 export function LandingPage() {
@@ -16,7 +16,7 @@ export function LandingPage() {
             <span className="hero-pill"><Sparkles size={16} aria-hidden="true" />{publicSiteContent.eyebrow}</span>
             <h1 id="landing-title">{publicSiteContent.heroTitle}</h1>
             <p>{publicSiteContent.heroDescription}</p>
-            <a className="button hero-button" href="#servicios">Ver servicios y precios<ArrowDown size={17} aria-hidden="true" /></a>
+            <a className="button hero-button" href="#precios">Ver precios por prenda<ArrowDown size={17} aria-hidden="true" /></a>
             <div className="hero-trust"><ShieldCheck size={19} aria-hidden="true" /><span>Cuidado profesional para tus prendas</span></div>
           </div>
           <div className="landing-visual" aria-hidden="true">
@@ -24,7 +24,7 @@ export function LandingPage() {
             <span className="bubble bubble-one" /><span className="bubble bubble-two" /><span className="bubble bubble-three" />
           </div>
         </section>
-        <PublicServicesSection />
+        <PublicGarmentPricesSection />
         <section id="nosotros" className="public-section about-section" aria-labelledby="about-title">
           <div className="about-accent" aria-hidden="true"><Sparkles size={42} /></div>
           <div>
@@ -51,7 +51,7 @@ export function LandingPage() {
       </main>
       <footer className="public-footer">
         <div><span className="footer-brand">SeLava</span><span>Tu ropa en buenas manos.</span></div>
-        <nav aria-label="Navegación secundaria"><a href="#servicios">Servicios</a><a href="#nosotros">Nosotros</a><a href="#contacto">Contacto</a></nav>
+        <nav aria-label="Navegación secundaria"><a href="#precios">Precios</a><a href="#nosotros">Nosotros</a><a href="#contacto">Contacto</a></nav>
       </footer>
     </div>
   )
