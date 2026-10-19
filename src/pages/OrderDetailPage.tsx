@@ -53,8 +53,9 @@ export function OrderDetailPage() {
             <article key={garment.id} className="garment-item">
               <div><h3>{garment.tipo_prenda?.nombre ?? `Prenda ${garment.id}`}</h3><span>Cantidad: {garment.cantidad}{garment.color ? ` · Color: ${garment.color}` : ''}</span></div>
               {garment.descripcion && <p>{garment.descripcion}</p>}
+              {garment.precio_aplicado != null && <p>Precio aplicado: {formatCurrency(garment.precio_aplicado)} × {garment.cantidad} = <strong>{formatCurrency(garment.precio_aplicado * garment.cantidad)}</strong></p>}
               <ul>
-                {garment.servicios.map((service) => <li key={service.id}><span>{service.servicio?.nombre ?? 'Servicio'}</span><strong>{formatCurrency(service.precio_aplicado)}</strong></li>)}
+                {garment.servicios.map((service) => <li key={service.id}><span>{service.servicio?.nombre ?? 'Servicio'}</span>{garment.precio_aplicado == null && <strong>{formatCurrency(service.precio_aplicado)}</strong>}</li>)}
               </ul>
             </article>
           ))}

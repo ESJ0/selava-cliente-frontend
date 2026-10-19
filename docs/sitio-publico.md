@@ -19,8 +19,8 @@ portal usan `ProtectedClientRoute` y devuelven al login cuando no hay sesión.
 
 - `PublicHeader`: logotipo, enlaces internos a las secciones y acceso a `/login`.
 - Hero de `LandingPage`: propuesta general y llamada a ver el catálogo.
-- `PublicServicesSection`: consume `GET /api/public/servicios` sin autenticación.
-  Incluye carga, catálogo vacío, error, reintento y tarjetas con precio base.
+- `PublicGarmentPricesSection`: consume `GET /api/public/tipos-prenda` sin autenticación.
+  Incluye carga, catálogo vacío, error, reintento y tarjetas con el precio por tipo de prenda.
 - Sobre nosotros: estructura terminada; el texto definitivo está pendiente.
 - Contacto y ubicación: admite teléfono, horario, dirección y mapa embebido.
 - Footer: navegación secundaria a las secciones públicas.
@@ -39,9 +39,10 @@ Los datos comerciales están centralizados en `src/content/publicSite.ts`:
 - `contact.address`;
 - `contact.mapEmbedUrl` con una URL de inserción permitida por el proveedor del mapa.
 
-Los servicios y precios no se editan en ese archivo: siempre proceden del endpoint
-público. La moneda se presenta como quetzales (`GTQ`) y el precio se etiqueta como
-base, conforme al nombre `precio_base` del contrato.
+Los precios por tipo de prenda no se editan en ese archivo: proceden del endpoint
+público, que filtra tipos activos con precio configurado. La moneda se presenta
+como quetzales (`GTQ`) con dos decimales, usando `precio` del contrato SEL-107.
+No se muestran tarifas propias por servicio.
 
 ## Comportamiento adaptable
 

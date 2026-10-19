@@ -24,6 +24,8 @@ export interface ServiceInfo { id: number; nombre: string; descripcion?: string;
 export interface GarmentService { id: number; servicio_id: number; precio_aplicado: number; servicio?: ServiceInfo }
 export interface OrderGarment {
   id: number
+  /** NULL/omitido conserva importes históricos por servicio. */
+  precio_aplicado?: number | null
   tipo_prenda_id: number
   tipo_prenda?: GarmentType
   descripcion?: string
