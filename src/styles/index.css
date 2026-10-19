@@ -304,11 +304,41 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .active-order p { color: var(--muted); font-size: 14px; }
 .active-order a { display: inline-flex; align-items: center; gap: 7px; width: fit-content; color: #007ba9; font-size: 14px; font-weight: 800; }
 
+/* Pagos del cliente */
+.payments-list { display: grid; gap: 18px; }
+.payment-order-card { padding: 0; overflow: hidden; }
+.payment-order-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 18px; }
+.section-eyebrow { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+.payment-order-heading h2 { margin-top: 4px; font-size: 20px; }
+.payment-order-heading a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #007ba9; font-size: 13px; font-weight: 800; }
+.payment-balance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--border); border-block: 1px solid var(--border); }
+.payment-balance-grid > div { display: grid; gap: 5px; padding: 17px 20px; background: #fafdff; }
+.payment-balance-grid dt { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.payment-balance-grid dd { margin: 0; font-size: 16px; font-weight: 800; }
+.payment-balance-grid .pending-balance { background: #fffbee; }
+.pending-balance dd { color: #856c00; }
+.payment-history { padding: 20px 24px 24px; }
+.payment-history h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; font-size: 16px; }
+.payment-history h3 svg { color: #0088bc; }
+.payment-history ul { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.payment-history li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 13px 0; border-top: 1px solid var(--border); }
+.payment-history li > div { display: grid; gap: 4px; }
+.payment-history li > div > strong { font-size: 14px; }
+.payment-history li > div > span { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; }
+.payment-history li > strong { font-size: 14px; white-space: nowrap; }
+.payment-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 11px; color: #007da9; background: #eaf8fe; }
+.no-payments { padding: 16px; border: 1px dashed #c7dce6; border-radius: 13px; color: var(--muted); background: #fafdff; font-size: 13px; line-height: 1.55; text-align: center; }
+
 @media (max-width: 639px) {
   .order-card dl, .order-summary-grid { grid-template-columns: 1fr; }
   .order-card { padding: 18px 42px 18px 17px; }
   .order-detail-heading { align-items: flex-start; }
   .garment-item > div { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .payment-order-heading { align-items: flex-start; padding: 18px 17px 14px; }
+  .payment-balance-grid { grid-template-columns: 1fr; }
+  .payment-balance-grid > div { padding: 14px 17px; }
+  .payment-history { padding: 18px 17px; }
+  .payment-history li { align-items: start; }
 }
 
 @media (prefers-reduced-motion: reduce) {
