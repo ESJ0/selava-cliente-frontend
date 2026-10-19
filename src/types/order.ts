@@ -35,6 +35,7 @@ export interface OrderGarment {
 }
 
 export interface OwnOrderDetail {
+  promociones_aplicadas?: import('./promotion').AppliedPromotion[]
   id: number
   fecha_recibido: string
   fecha_entrega_estimada?: string

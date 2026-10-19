@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getOwnOrderDetail, getOwnOrderHistory } from '../api/orders'
 import { Card } from '../components/Card'
+import { AppliedPromotions } from '../components/AppliedPromotions'
 import { OrderStatusBadge } from '../components/OrderStatusBadge'
 import { OrderTimeline } from '../components/OrderTimeline'
 import { OrdersError, OrdersLoading } from '../components/OrdersState'
@@ -53,13 +54,14 @@ export function OrderDetailPage() {
             <article key={garment.id} className="garment-item">
               <div><h3>{garment.tipo_prenda?.nombre ?? `Prenda ${garment.id}`}</h3><span>Cantidad: {garment.cantidad}{garment.color ? ` · Color: ${garment.color}` : ''}</span></div>
               {garment.descripcion && <p>{garment.descripcion}</p>}
-              {garment.precio_aplicado != null && <p>Precio aplicado: {formatCurrency(garment.precio_aplicado)} × {garment.cantidad} = <strong>{formatCurrency(garment.precio_aplicado * garment.cantidad)}</strong></p>}
+              {detail.promociones_aplicadas?.some(p => p.prenda_ids?.includes(garment.id)) ? <p>Importe incluido en el desglose de promociones.</p> : garment.precio_aplicado != null && <p>Precio aplicado: {formatCurrency(garment.precio_aplicado)} × {garment.cantidad} = <strong>{formatCurrency(garment.precio_aplicado * garment.cantidad)}</strong></p>}
               <ul>
                 {garment.servicios.map((service) => <li key={service.id}><span>{service.servicio?.nombre ?? 'Servicio'}</span>{garment.precio_aplicado == null && <strong>{formatCurrency(service.precio_aplicado)}</strong>}</li>)}
               </ul>
             </article>
           ))}
         </div>
+        {!!detail.promociones_aplicadas?.length && <AppliedPromotions promotions={detail.promociones_aplicadas} />}
         {detail.observaciones && <div className="order-notes"><strong>Observaciones</strong><p>{detail.observaciones}</p></div>}
       </Card>
 
