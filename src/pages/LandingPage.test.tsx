@@ -54,8 +54,8 @@ describe('sitio público', () => {
 
   it('presenta precios por prenda sin tarifas propias de servicios', async () => {
     getPublicGarmentTypesMock.mockResolvedValue([
-      { id: 1, nombre: 'Camisa', descripcion: 'Para prendas delicadas', precio: 35.5 },
-      { id: 2, nombre: 'Pantalón', descripcion: null, precio: 15 },
+      { id: 1, nombre: 'Camisa', descripcion: 'Para prendas delicadas', precio: 35.5, modalidad_cobro: 'UNIDAD' },
+      { id: 2, nombre: 'Pantalón', descripcion: null, precio: 15, modalidad_cobro: 'UNIDAD' },
     ])
     renderSite()
     const serviceTitle = await screen.findByRole('heading', { name: 'Camisa' })
@@ -66,6 +66,19 @@ describe('sitio público', () => {
     expect(screen.queryByText(/Tiempo estimado|Desde/)).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Lavado en seco' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Pantalón' })).toBeInTheDocument()
+  })
+
+  it('presenta la tarifa real por unidad, libra y metro sin inferirla del nombre', async () => {
+    getPublicGarmentTypesMock.mockResolvedValue([
+      { id: 10, nombre: 'Prenda A', descripcion: null, precio: 25, modalidad_cobro: 'UNIDAD' },
+      { id: 11, nombre: 'Prenda B', descripcion: null, precio: 12, modalidad_cobro: 'LIBRA' },
+      { id: 12, nombre: 'Prenda C', descripcion: null, precio: 18, modalidad_cobro: 'METRO' },
+    ])
+    renderSite()
+    for (const [name, rate] of [['Prenda A', /Q\s*25\.00 por unidad/], ['Prenda B', /Q\s*12\.00 por libra/], ['Prenda C', /Q\s*18\.00 por metro/]] as const) {
+      const heading = await screen.findByRole('heading', { name })
+      expect(heading.closest('article')).toHaveTextContent(rate)
+    }
   })
 
   it('permite reintentar cuando el catálogo falla', async () => {
