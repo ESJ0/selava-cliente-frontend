@@ -150,6 +150,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .service-meta { display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding-top: 24px; }
 .service-meta strong { color: #007fae; font-size: 24px; }
 .service-meta strong span { display: block; margin-bottom: 3px; color: #738a98; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.service-meta strong .pricing-unit { display: inline; margin: 0; font-size: 14px; font-weight: 500; text-transform: none; }
 .service-meta > span { display: flex; align-items: center; gap: 7px; color: #677f8e; font-size: 13px; }
 .price-note { margin-top: 24px; color: #718895; font-size: 12px; text-align: center; }
 .service-skeleton { min-height: 295px; border-radius: 22px; background: linear-gradient(105deg, #eff5f7 25%, #f9fcfd 40%, #eff5f7 55%); background-size: 200% 100%; animation: loading 1.3s infinite linear; }
@@ -281,6 +282,12 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .detail-section > h2 { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; font-size: 19px; }
 .garments-list { display: grid; gap: 13px; }
 .garment-item { padding: 17px; border: 1px solid var(--border); border-radius: 15px; }
+.garment-item { min-width: 0; overflow-wrap: anywhere; }
+.garment-pricing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 0 0; }
+.garment-pricing > div { min-width: 0; }
+.garment-pricing dt { margin-bottom: 5px; color: var(--muted); font-size: 12px; }
+.garment-pricing dd { margin: 0; font-size: 14px; font-weight: 600; }
+@media (max-width: 520px) { .garment-pricing { grid-template-columns: 1fr; } }
 .garment-item > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .garment-item h3 { font-size: 16px; }
 .garment-item > div > span, .garment-item > p { color: var(--muted); font-size: 13px; }
