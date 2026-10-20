@@ -8,6 +8,7 @@ import { OrderTimeline } from '../components/OrderTimeline'
 import { OrdersError, OrdersLoading } from '../components/OrdersState'
 import type { OwnOrderDetail, OwnOrderHistoryEntry } from '../types/order'
 import { formatCurrency, formatDate, orderCode } from '../utils/format'
+import { formatAppliedMeasure, formatChargeRate } from '../utils/chargeMode'
 
 export function OrderDetailPage() {
   const { pedidoID } = useParams()
@@ -23,8 +24,9 @@ export function OrderDetailPage() {
     const controller = new AbortController()
     setStatus('loading')
     Promise.all([getOwnOrderDetail(orderId, controller.signal), getOwnOrderHistory(orderId, controller.signal)])
-      .then(([order, entries]) => { setDetail(order); setHistory(entries); setStatus('ready') })
+      .then(([order, entries]) => { if (!controller.signal.aborted) { setDetail(order); setHistory(entries); setStatus('ready') } })
       .catch((error: unknown) => {
+        if (controller.signal.aborted) return
         if (!(error instanceof DOMException && error.name === 'AbortError')) setStatus('error')
       })
     return () => controller.abort()
@@ -48,12 +50,17 @@ export function OrderDetailPage() {
 
       <Card className="detail-section">
         <h2><Shirt size={20} aria-hidden="true" />Prendas y servicios</h2>
+        {detail.prendas.length === 0 && <p className="empty-block">Este pedido no tiene prendas registradas.</p>}
         <div className="garments-list">
           {detail.prendas.map((garment) => (
             <article key={garment.id} className="garment-item">
-              <div><h3>{garment.tipo_prenda?.nombre ?? `Prenda ${garment.id}`}</h3><span>Cantidad: {garment.cantidad}{garment.color ? ` · Color: ${garment.color}` : ''}</span></div>
+              <div><h3>{garment.tipo_prenda?.nombre ?? `Prenda ${garment.id}`}</h3>{garment.color && <span>Color: {garment.color}</span>}</div>
               {garment.descripcion && <p>{garment.descripcion}</p>}
-              {garment.precio_aplicado != null && <p>Precio aplicado: {formatCurrency(garment.precio_aplicado)} × {garment.cantidad} = <strong>{formatCurrency(garment.precio_aplicado * garment.cantidad)}</strong></p>}
+              <dl className="garment-pricing">
+                <div><dt>Medida aplicada</dt><dd>{formatAppliedMeasure(garment.cantidad, garment.modalidad_cobro_aplicada ?? 'UNIDAD')}</dd></div>
+                {garment.precio_aplicado != null && <div><dt>Precio aplicado</dt><dd>{formatChargeRate(garment.precio_aplicado, garment.modalidad_cobro_aplicada ?? 'UNIDAD')}</dd></div>}
+                <div><dt>Subtotal</dt><dd>{garment.subtotal == null ? 'No disponible' : formatCurrency(garment.subtotal)}</dd></div>
+              </dl>
               <ul>
                 {garment.servicios.map((service) => <li key={service.id}><span>{service.servicio?.nombre ?? 'Servicio'}</span>{garment.precio_aplicado == null && <strong>{formatCurrency(service.precio_aplicado)}</strong>}</li>)}
               </ul>

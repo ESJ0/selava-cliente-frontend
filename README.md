@@ -59,6 +59,12 @@ nunca se almacenan.
 Los pedidos consumen exclusivamente las rutas privadas `/api/cliente/pedidos`.
 El detalle presenta el precio congelado de la prenda para SEL-107 y conserva los
 importes históricos por servicio cuando no existe esa instantánea.
+SEL-108 presenta la tarifa pública según `modalidad_cobro` y la medida del pedido
+según `modalidad_cobro_aplicada` y `cantidad`. Si la modalidad histórica falta,
+conserva UNIDAD y nunca toma la modalidad actual del catálogo. El subtotal se
+muestra desde `prendas[].subtotal` de lectura del backend #42 y el total desde
+`pedido.total`; el cliente no reconstruye ninguno de esos importes. Un backend
+anterior sin subtotal muestra «No disponible» en esa fila.
 El listado, detalle, historial y tarjeta de pedido activo incluyen estados de
 carga, vacío y error, y nunca envían un `cliente_id` desde el navegador.
 

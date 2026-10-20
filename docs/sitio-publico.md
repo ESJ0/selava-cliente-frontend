@@ -43,6 +43,15 @@ Los precios por tipo de prenda no se editan en ese archivo: proceden del endpoin
 público, que filtra tipos activos con precio configurado. La moneda se presenta
 como quetzales (`GTQ`) con dos decimales, usando `precio` del contrato SEL-107.
 No se muestran tarifas propias por servicio.
+SEL-108 añade `modalidad_cobro`: UNIDAD, LIBRA y METRO se presentan como «por
+unidad», «por libra» y «por metro», respectivamente. Los nombres y tarifas
+proceden del backend, sin deducir la modalidad a partir del nombre de la prenda.
+
+En el detalle, `cantidad` representa la medida congelada y se etiqueta con
+`modalidad_cobro_aplicada`. El precio es `precio_aplicado` y el subtotal se recibe
+del servidor en `subtotal`, sin multiplicación local. Una modalidad ausente
+conserva UNIDAD, aunque el catálogo actual indique otra modalidad. El total
+siempre es el valor de la respuesta del pedido.
 
 ## Comportamiento adaptable
 
