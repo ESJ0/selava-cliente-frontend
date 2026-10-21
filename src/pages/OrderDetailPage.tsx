@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getOwnOrderDetail, getOwnOrderHistory } from '../api/orders'
 import { Card } from '../components/Card'
+import { AppliedPromotions } from '../components/AppliedPromotions'
 import { OrderStatusBadge } from '../components/OrderStatusBadge'
 import { OrderTimeline } from '../components/OrderTimeline'
 import { OrdersError, OrdersLoading } from '../components/OrdersState'
@@ -52,21 +53,26 @@ export function OrderDetailPage() {
         <h2><Shirt size={20} aria-hidden="true" />Prendas y servicios</h2>
         {detail.prendas.length === 0 && <p className="empty-block">Este pedido no tiene prendas registradas.</p>}
         <div className="garments-list">
-          {detail.prendas.map((garment) => (
+          {detail.prendas.map((garment) => {
+            const hasPromotion = detail.promociones_aplicadas?.some(p => p.prenda_ids?.includes(garment.id)) ?? false
+            return (
             <article key={garment.id} className="garment-item">
               <div><h3>{garment.tipo_prenda?.nombre ?? `Prenda ${garment.id}`}</h3>{garment.color && <span>Color: {garment.color}</span>}</div>
               {garment.descripcion && <p>{garment.descripcion}</p>}
               <dl className="garment-pricing">
                 <div><dt>Medida aplicada</dt><dd>{formatAppliedMeasure(garment.cantidad, garment.modalidad_cobro_aplicada ?? 'UNIDAD')}</dd></div>
                 {garment.precio_aplicado != null && <div><dt>Precio aplicado</dt><dd>{formatChargeRate(garment.precio_aplicado, garment.modalidad_cobro_aplicada ?? 'UNIDAD')}</dd></div>}
-                <div><dt>Subtotal</dt><dd>{garment.subtotal == null ? 'No disponible' : formatCurrency(garment.subtotal)}</dd></div>
+                <div><dt>{hasPromotion ? 'Subtotal sin promoción' : 'Subtotal'}</dt><dd>{garment.subtotal == null ? 'No disponible' : formatCurrency(garment.subtotal)}</dd></div>
               </dl>
+              {hasPromotion && <p>Importe incluido en el desglose de promociones.</p>}
               <ul>
                 {garment.servicios.map((service) => <li key={service.id}><span>{service.servicio?.nombre ?? 'Servicio'}</span>{garment.precio_aplicado == null && <strong>{formatCurrency(service.precio_aplicado)}</strong>}</li>)}
               </ul>
             </article>
-          ))}
+            )
+          })}
         </div>
+        {!!detail.promociones_aplicadas?.length && <AppliedPromotions promotions={detail.promociones_aplicadas} />}
         {detail.observaciones && <div className="order-notes"><strong>Observaciones</strong><p>{detail.observaciones}</p></div>}
       </Card>
 

@@ -80,3 +80,11 @@ npm run preview
 
 La arquitectura, los puntos de edición y la matriz de pruebas responsivas se
 documentan en [`docs/sitio-publico.md`](docs/sitio-publico.md).
+## Promociones aplicadas (SEL-109)
+
+El detalle privado presenta `promociones_aplicadas` del backend: nombre, modalidad,
+aplicaciones, medida cubierta, sobrante e importes guardados. No consulta el
+catálogo de promociones ni reconstruye los importes desde tarifas actuales.
+Las prendas incluidas remiten al desglose para evitar mostrar un precio normal
+como importe final. Los pedidos anteriores sin promociones mantienen su vista.
+Requiere backend SEL-109 con migración 025; no agrega configuración ni dependencias.
