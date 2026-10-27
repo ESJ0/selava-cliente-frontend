@@ -15,5 +15,5 @@ export function formatDate(value?: string, includeTime = false): string {
 
 export function isActiveOrder(status: string): boolean {
   const normalized = status.trim().toLocaleLowerCase('es')
-  return normalized !== 'entregado' && normalized !== 'cancelado'
+  return !['finalizado', 'entregado', 'cancelado'].includes(normalized)
 }
