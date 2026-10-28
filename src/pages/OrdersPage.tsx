@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getOwnOrders } from '../api/orders'
-import { OrderStatusBadge } from '../components/OrderStatusBadge'
+import { OrderStatusSummary } from '../components/OrderStatusSummary'
 import { OrdersEmpty, OrdersError, OrdersLoading } from '../components/OrdersState'
 import type { OwnOrderSummary } from '../types/order'
 import { formatCurrency, formatDate, orderCode } from '../utils/format'
@@ -32,7 +32,7 @@ export function OrdersPage() {
         <div className="orders-list">
           {orders.map((order) => (
             <Link className="order-card" to={`/mis-pedidos/${order.id}`} key={order.id} aria-label={`Ver pedido ${orderCode(order.id)}`}>
-              <div><span className="order-code">{orderCode(order.id)}</span><OrderStatusBadge status={order.estado_actual.nombre} /></div>
+              <div><span className="order-code">{orderCode(order.id)}</span><OrderStatusSummary status={order.estado_actual} /></div>
               <dl>
                 <div><dt>Recibido</dt><dd>{formatDate(order.fecha_recibido)}</dd></div>
                 <div><dt>Entrega estimada</dt><dd>{formatDate(order.fecha_entrega_estimada)}</dd></div>
