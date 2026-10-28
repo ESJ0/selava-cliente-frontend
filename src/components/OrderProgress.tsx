@@ -1,34 +1,6 @@
-import {
-  BadgeCheck,
-  Clock3,
-  ListChecks,
-  PackageCheck,
-  Shirt,
-  Waves,
-  Wind,
-  type LucideIcon,
-} from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { OrderFlowStage, OwnOrderFlow } from '../types/order'
-
-const iconsByStage: Record<string, LucideIcon> = {
-  RECIBIDO: PackageCheck,
-  EN_LAVADO: Waves,
-  EN_LAVADO_SECO: Wind,
-  EN_LAVADO_EN_SECO: Wind,
-  EN_PLANCHADO: Shirt,
-  RACKEADO: ListChecks,
-  FINALIZADO: BadgeCheck,
-}
-
-function stageKey(stage: OrderFlowStage) {
-  return (stage.codigo ?? stage.nombre)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, '_')
-    .replace(/^_|_$/g, '')
-}
+import { orderStageIcon, orderStageKey } from '../utils/orderStage'
 
 function stageStatus(stage: OrderFlowStage) {
   if (stage.actual) return { className: 'current', label: 'Estado actual' }
@@ -66,8 +38,8 @@ export function OrderProgress({ flow }: { flow: OwnOrderFlow }) {
         style={{ '--stage-count': stages.length } as CSSProperties}
       >
         {stages.map((stage, index) => {
-          const key = stageKey(stage)
-          const Icon = iconsByStage[key] ?? Clock3
+          const key = orderStageKey(stage)
+          const Icon = orderStageIcon(stage)
           const status = stageStatus(stage)
           const nextStage = stages[index + 1]
           const connectorCompleted = nextStage?.completado || nextStage?.actual
