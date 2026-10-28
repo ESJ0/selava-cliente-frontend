@@ -1,38 +1,20 @@
-import { ArrowLeft, CalendarDays, Shirt, WalletCards } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { AlertCircle, ArrowLeft, CalendarDays, RefreshCw, Shirt, WalletCards } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { getOwnOrderDetail, getOwnOrderHistory } from '../api/orders'
 import { Card } from '../components/Card'
 import { AppliedPromotions } from '../components/AppliedPromotions'
+import { Button } from '../components/Button'
 import { OrderStatusBadge } from '../components/OrderStatusBadge'
 import { OrderProgress } from '../components/OrderProgress'
 import { OrderTimeline } from '../components/OrderTimeline'
 import { OrdersError, OrdersLoading } from '../components/OrdersState'
-import type { OwnOrderDetail, OwnOrderHistoryEntry } from '../types/order'
+import { useOrderTracking } from '../hooks/useOrderTracking'
 import { formatCurrency, formatDate, orderCode } from '../utils/format'
 import { formatAppliedMeasure, formatChargeRate } from '../utils/chargeMode'
 
 export function OrderDetailPage() {
   const { pedidoID } = useParams()
   const orderId = Number(pedidoID)
-  const [detail, setDetail] = useState<OwnOrderDetail | null>(null)
-  const [history, setHistory] = useState<OwnOrderHistoryEntry[]>([])
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [reloadKey, setReloadKey] = useState(0)
-  const retry = useCallback(() => setReloadKey((key) => key + 1), [])
-
-  useEffect(() => {
-    if (!Number.isInteger(orderId) || orderId <= 0) { setStatus('error'); return }
-    const controller = new AbortController()
-    setStatus('loading')
-    Promise.all([getOwnOrderDetail(orderId, controller.signal), getOwnOrderHistory(orderId, controller.signal)])
-      .then(([order, entries]) => { if (!controller.signal.aborted) { setDetail(order); setHistory(entries); setStatus('ready') } })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return
-        if (!(error instanceof DOMException && error.name === 'AbortError')) setStatus('error')
-      })
-    return () => controller.abort()
-  }, [orderId, reloadKey])
+  const { detail, history, status, refreshing, refreshError, retry, refresh } = useOrderTracking(orderId)
 
   if (status === 'loading') return <OrdersLoading label="Cargando detalle del pedido…" />
   if (status === 'error' || !detail) return <OrdersError retry={retry} message="No pudimos cargar este pedido." />
@@ -44,6 +26,14 @@ export function OrderDetailPage() {
         <div><span className="section-eyebrow">Pedido</span><h1 id="order-detail-title">{orderCode(detail.id)}</h1></div>
         <OrderStatusBadge status={detail.estado_actual.nombre} />
       </div>
+      {refreshing && <p className="tracking-refreshing" role="status"><RefreshCw className="state-spinner" size={16} aria-hidden="true" />Actualizando estado…</p>}
+      {refreshError && (
+        <div className="tracking-refresh-error" role="alert">
+          <AlertCircle size={19} aria-hidden="true" />
+          <span><strong>No pudimos actualizar el estado.</strong> Conservamos la última información disponible.</span>
+          <Button className="button-secondary" onClick={refresh}>Reintentar</Button>
+        </div>
+      )}
       <Card className="order-summary-grid">
         <div><CalendarDays aria-hidden="true" /><span>Recibido<strong>{formatDate(detail.fecha_recibido)}</strong></span></div>
         <div><CalendarDays aria-hidden="true" /><span>Entrega estimada<strong>{formatDate(detail.fecha_entrega_estimada)}</strong></span></div>
@@ -79,7 +69,7 @@ export function OrderDetailPage() {
 
       <Card className="detail-section">
         <h2>Seguimiento del pedido</h2>
-        <OrderProgress flow={detail.flujo_operativo} />
+        <OrderProgress flow={detail.flujo_operativo} currentStatus={detail.estado_actual} />
         <div className="order-history-section">
           <h3>Historial de cambios</h3>
           <OrderTimeline entries={history} />
