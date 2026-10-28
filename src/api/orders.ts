@@ -8,7 +8,13 @@ export async function getOwnOrders(params: OwnOrdersParams = {}, signal?: AbortS
 
 export async function getOwnOrderDetail(orderId: number, signal?: AbortSignal): Promise<OwnOrderDetail> {
   const { data } = await authenticatedApi.get<OwnOrderDetail>(`/cliente/pedidos/${orderId}`, { signal })
-  return data
+  return {
+    ...data,
+    flujo_operativo: {
+      ...data.flujo_operativo,
+      estados: [...data.flujo_operativo.estados].sort((a, b) => a.orden - b.orden),
+    },
+  }
 }
 
 export async function getOwnOrderHistory(orderId: number, signal?: AbortSignal): Promise<OwnOrderHistoryEntry[]> {
