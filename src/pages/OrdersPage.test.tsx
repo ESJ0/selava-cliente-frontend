@@ -38,7 +38,9 @@ describe('pedidos del cliente SEL-105', () => {
     renderAt('/mis-pedidos')
     const link = await screen.findByRole('link', { name: 'Ver pedido SLV-0007' })
     expect(link).toHaveAttribute('href', '/mis-pedidos/7')
-    expect(within(link).getByText('Rackeado')).toBeInTheDocument()
+    const summary = within(link).getByRole('status', { name: 'Estado actual: Rackeado' })
+    expect(summary).toBeVisible()
+    expect(summary.querySelector('svg')).toHaveClass('lucide-list-checks')
     expect(within(link).getByText(/75[.,]50/)).toBeInTheDocument()
   })
 
