@@ -14,6 +14,19 @@ const stages: OrderFlowStage[] = [
 
 const flow: OwnOrderFlow = { estados: stages, progreso_porcentaje: 50, cancelado: false }
 
+function flowAt(code: string, progress: number, applicableStages = stages): OwnOrderFlow {
+  const currentOrder = applicableStages.find((stage) => stage.codigo === code)?.orden ?? 0
+  return {
+    estados: applicableStages.map((stage) => ({
+      ...stage,
+      completado: stage.orden <= currentOrder,
+      actual: stage.codigo === code,
+    })),
+    progreso_porcentaje: progress,
+    cancelado: false,
+  }
+}
+
 describe('OrderProgress', () => {
   it('representa etapas completadas, actual y pendientes con sus iconos', () => {
     const { container } = render(<OrderProgress flow={flow} />)
@@ -44,6 +57,44 @@ describe('OrderProgress', () => {
     expect(screen.queryByText('En lavado en seco')).not.toBeInTheDocument()
     expect(screen.queryByText('En planchado')).not.toBeInTheDocument()
     expect(screen.getByText('Servicios: Lavado')).toBeVisible()
+  })
+
+  it('representa un pedido recién recibido con las etapas posteriores pendientes', () => {
+    const applicableStages = [stages[0], stages[1], stages[4], stages[5]]
+    const { container } = render(<OrderProgress flow={flowAt('RECIBIDO', 25, applicableStages)} />)
+
+    const current = container.querySelector('[data-stage-code="RECIBIDO"]')
+    expect(current).toHaveClass('current')
+    expect(current).toHaveAttribute('aria-current', 'step')
+    expect(within(current as HTMLElement).getByText('Estado actual')).toBeVisible()
+    expect(container.querySelectorAll('.order-progress-stage.pending')).toHaveLength(3)
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25')
+  })
+
+  it('representa un pedido en proceso con etapas intermedias completadas', () => {
+    const { container } = render(<OrderProgress flow={flowAt('EN_PLANCHADO', 67)} />)
+
+    expect(container.querySelector('[data-stage-code="RECIBIDO"]')).toHaveClass('completed')
+    expect(container.querySelector('[data-stage-code="EN_LAVADO"]')).toHaveClass('completed')
+    expect(container.querySelector('[data-stage-code="EN_LAVADO_SECO"]')).toHaveClass('completed')
+    expect(container.querySelector('[data-stage-code="EN_PLANCHADO"]')).toHaveClass('current')
+    expect(container.querySelector('[data-stage-code="RACKEADO"]')).toHaveClass('pending')
+    expect(container.querySelector('[data-stage-code="FINALIZADO"]')).toHaveClass('pending')
+  })
+
+  it('representa un pedido Finalizado con el progreso completo', () => {
+    const finalizedStages = flowAt('FINALIZADO', 100).estados.reverse()
+    const { container } = render(<OrderProgress flow={{ estados: finalizedStages, progreso_porcentaje: 100, cancelado: false }} />)
+
+    const orderedCodes = within(screen.getByRole('list', { name: 'Progreso del pedido' }))
+      .getAllByRole('listitem')
+      .map((item) => item.getAttribute('data-stage-code'))
+    expect(orderedCodes).toEqual(['RECIBIDO', 'EN_LAVADO', 'EN_LAVADO_SECO', 'EN_PLANCHADO', 'RACKEADO', 'FINALIZADO'])
+    expect(container.querySelectorAll('.order-progress-stage.completed')).toHaveLength(5)
+    expect(container.querySelector('[data-stage-code="FINALIZADO"]')).toHaveClass('current')
+    expect(container.querySelector('.order-progress-stage.pending')).not.toBeInTheDocument()
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100')
+    expect(container.querySelector<HTMLElement>('.order-progress-bar > span')).toHaveStyle({ width: '100%' })
   })
 
   it('presenta un estado vacío cuando la API no devuelve etapas', () => {
