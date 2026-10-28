@@ -19,8 +19,8 @@ it('consume listado, detalle e historial con el JWT del cliente', async () => {
     estado_actual: { id: 2, nombre: 'En lavado', codigo: 'EN_LAVADO', orden: 20 },
     flujo_operativo: {
       estados: [
-        { id: 1, nombre: 'Recibido', codigo: 'RECIBIDO', orden: 10, servicios: [], completado: true, actual: false },
         { id: 2, nombre: 'En lavado', codigo: 'EN_LAVADO', orden: 20, servicios: [{ id: 4, nombre: 'Lavado' }], completado: true, actual: true },
+        { id: 1, nombre: 'Recibido', codigo: 'RECIBIDO', orden: 10, servicios: [], completado: true, actual: false },
       ],
       progreso_porcentaje: 100,
       cancelado: false,
@@ -46,5 +46,6 @@ it('consume listado, detalle e historial con el JWT del cliente', async () => {
   ])
   expect(detail.estado_actual.codigo).toBe('EN_LAVADO')
   expect(detail.flujo_operativo.estados[1].servicios).toEqual([{ id: 4, nombre: 'Lavado' }])
+  expect(detail.flujo_operativo.estados.map((stage) => stage.codigo)).toEqual(['RECIBIDO', 'EN_LAVADO'])
   expect(history.map((entry) => entry.estado.nombre)).toEqual(['Recibido', 'En lavado'])
 })

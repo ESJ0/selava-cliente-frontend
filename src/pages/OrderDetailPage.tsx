@@ -5,6 +5,7 @@ import { getOwnOrderDetail, getOwnOrderHistory } from '../api/orders'
 import { Card } from '../components/Card'
 import { AppliedPromotions } from '../components/AppliedPromotions'
 import { OrderStatusBadge } from '../components/OrderStatusBadge'
+import { OrderProgress } from '../components/OrderProgress'
 import { OrderTimeline } from '../components/OrderTimeline'
 import { OrdersError, OrdersLoading } from '../components/OrdersState'
 import type { OwnOrderDetail, OwnOrderHistoryEntry } from '../types/order'
@@ -76,7 +77,14 @@ export function OrderDetailPage() {
         {detail.observaciones && <div className="order-notes"><strong>Observaciones</strong><p>{detail.observaciones}</p></div>}
       </Card>
 
-      <Card className="detail-section"><h2>Seguimiento del pedido</h2><OrderTimeline entries={history} /></Card>
+      <Card className="detail-section">
+        <h2>Seguimiento del pedido</h2>
+        <OrderProgress flow={detail.flujo_operativo} />
+        <div className="order-history-section">
+          <h3>Historial de cambios</h3>
+          <OrderTimeline entries={history} />
+        </div>
+      </Card>
     </section>
   )
 }
