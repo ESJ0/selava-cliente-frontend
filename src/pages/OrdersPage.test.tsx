@@ -56,6 +56,7 @@ describe('pedidos del cliente SEL-105', () => {
     detailMock.mockResolvedValue({
       id: 7, fecha_recibido: '2026-10-15T14:00:00Z', fecha_entrega_estimada: '2026-10-18T14:00:00Z', total: 75.5,
       estado_actual: { id: 2, nombre: 'Rackeado', orden: 2 }, observaciones: 'Tratar con cuidado',
+      flujo_operativo: { estados: [], progreso_porcentaje: 0, cancelado: false },
       prendas: [{ id: 3, tipo_prenda_id: 1, tipo_prenda: { id: 1, nombre: 'Camisa' }, cantidad: 2, color: 'Azul', servicios: [{ id: 8, servicio_id: 2, precio_aplicado: 25, servicio: { id: 2, nombre: 'Lavado en seco', precio_base: 25 } }] }],
     })
     historyMock.mockResolvedValue([
