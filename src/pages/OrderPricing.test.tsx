@@ -16,11 +16,12 @@ function renderDetail() {
   return render(<MemoryRouter initialEntries={['/mis-pedidos/7']}><Routes><Route path="/mis-pedidos/:pedidoID" element={<OrderDetailPage />} /></Routes></MemoryRouter>)
 }
 
-const baseOrder = { id: 7, fecha_recibido: '2026-10-19T10:00:00Z', total: 199.99, estado_actual: { id: 1, nombre: 'Recibido', orden: 1 } }
+const baseFlow = { estados: [], progreso_porcentaje: 0, cancelado: false }
+const baseOrder = { id: 7, fecha_recibido: '2026-10-19T10:00:00Z', total: 199.99, estado_actual: { id: 1, nombre: 'Recibido', orden: 1 }, flujo_operativo: baseFlow }
 
 it.each([true, false])('presenta el importe congelado con precio de prenda=%s y conserva el histórico', async (newPricing) => {
   vi.mocked(getOwnOrderDetail).mockResolvedValue({
-    id: 7, fecha_recibido: '2026-10-19T10:00:00Z', total: 50, estado_actual: { id: 1, nombre: 'Recibido', orden: 1 },
+    ...baseOrder, total: 50,
     prendas: [{ id: 1, tipo_prenda_id: 2, tipo_prenda: { id: 2, nombre: 'Camisa' }, cantidad: 2, subtotal: 50, precio_aplicado: newPricing ? 25 : null, servicios: [{ id: 3, servicio_id: 4, precio_aplicado: newPricing ? 0 : 25, servicio: { id: 4, nombre: 'Lavado', precio_base: 999 } }] }],
   })
   render(<MemoryRouter initialEntries={['/mis-pedidos/7']}><Routes><Route path="/mis-pedidos/:pedidoID" element={<OrderDetailPage />} /></Routes></MemoryRouter>)
