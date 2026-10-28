@@ -261,6 +261,15 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .order-card > div:first-child, .active-order > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .order-code { font-size: 18px; font-weight: 800; letter-spacing: .3px; }
 .order-status { display: inline-flex; align-items: center; min-height: 28px; padding: 5px 11px; border-radius: 18px; color: #006e96; background: #e5f8ff; font-size: 12px; font-weight: 800; }
+.order-state-summary { min-width: 0; display: inline-flex; align-items: center; gap: 9px; padding: 7px 10px 7px 8px; border: 1px solid #ccebf5; border-radius: 14px; color: #07516d; background: #f0faff; }
+.order-state-summary-icon { width: 31px; height: 31px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 10px; color: #007da9; background: #dff6fd; }
+.order-state-summary-copy { min-width: 0; display: grid; gap: 1px; }
+.order-state-summary-copy small { color: #5d7887; font-size: 9px; font-weight: 700; letter-spacing: .35px; text-transform: uppercase; }
+.order-state-summary-copy strong { max-width: 130px; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.order-state-summary.state-finalizado { border-color: #b8e4cd; color: #17613d; background: #effaf4; }
+.order-state-summary.state-finalizado .order-state-summary-icon { color: #17613d; background: #d9f3e5; }
+.order-state-summary.state-cancelado { border-color: #efc6ca; color: #942c36; background: #fff3f4; }
+.order-state-summary.state-cancelado .order-state-summary-icon { color: #942c36; background: #fbe0e3; }
 .order-card dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; }
 .order-card dl div { display: grid; gap: 5px; }
 .order-card dt { color: var(--muted); font-size: 11px; text-transform: uppercase; }
