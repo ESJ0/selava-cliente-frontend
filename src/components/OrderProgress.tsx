@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { OrderFlowStage, OwnOrderFlow } from '../types/order'
+import type { OrderFlowStage, OrderStatus, OwnOrderFlow } from '../types/order'
 import { orderStageIcon, orderStageKey } from '../utils/orderStage'
 
 function stageStatus(stage: OrderFlowStage) {
@@ -8,11 +8,20 @@ function stageStatus(stage: OrderFlowStage) {
   return { className: 'pending', label: 'Pendiente' }
 }
 
-export function OrderProgress({ flow }: { flow: OwnOrderFlow }) {
+export function OrderProgress({ flow, currentStatus }: { flow: OwnOrderFlow; currentStatus?: OrderStatus }) {
   const stages = [...flow.estados].sort((a, b) => a.orden - b.orden)
   const progress = Math.min(100, Math.max(0, flow.progreso_porcentaje))
 
   if (stages.length === 0) {
+    if (currentStatus) {
+      const Icon = orderStageIcon(currentStatus)
+      return (
+        <div className="order-progress-legacy" role="status" aria-label={`Estado actual del pedido histórico: ${currentStatus.nombre}`}>
+          <span><Icon size={20} aria-hidden="true" /></span>
+          <div><strong>{currentStatus.nombre}</strong><p>Este pedido anterior no cuenta con el desglose completo de etapas.</p></div>
+        </div>
+      )
+    }
     return <p className="muted-copy">No hay etapas de seguimiento disponibles para este pedido.</p>
   }
 

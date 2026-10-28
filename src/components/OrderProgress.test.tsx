@@ -50,4 +50,9 @@ describe('OrderProgress', () => {
     render(<OrderProgress flow={{ estados: [], progreso_porcentaje: 0, cancelado: false }} />)
     expect(screen.getByText('No hay etapas de seguimiento disponibles para este pedido.')).toBeVisible()
   })
+
+  it('conserva visible el estado de un pedido histórico sin flujo detallado', () => {
+    render(<OrderProgress flow={{ estados: [], progreso_porcentaje: 0, cancelado: false }} currentStatus={{ id: 7, nombre: 'Entregado', orden: 3 }} />)
+    expect(screen.getByRole('status', { name: 'Estado actual del pedido histórico: Entregado' })).toHaveTextContent('Este pedido anterior no cuenta con el desglose completo de etapas.')
+  })
 })

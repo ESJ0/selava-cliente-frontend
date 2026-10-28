@@ -312,6 +312,11 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .order-progress-bar > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #05aff2, #05c7f2); transition: width .25s ease; }
 .order-progress.cancelled .order-progress-summary strong { color: #a92531; }
 .order-progress.cancelled .order-progress-bar > span { background: #c85661; }
+.order-progress-legacy { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px dashed #bad9e6; border-radius: 14px; background: #f8fcfe; }
+.order-progress-legacy > span { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 12px; color: #007da9; background: #e2f7fd; }
+.order-progress-legacy > div { display: grid; gap: 3px; }
+.order-progress-legacy strong { font-size: 14px; }
+.order-progress-legacy p { color: var(--muted); font-size: 12px; line-height: 1.45; }
 .order-progress-stages { display: grid; grid-template-columns: repeat(var(--stage-count), minmax(0, 1fr)); gap: 0; margin: 24px 0 0; padding: 0; list-style: none; }
 .order-progress-stage { position: relative; min-width: 0; display: grid; justify-items: center; align-content: start; gap: 9px; padding-inline: 4px; text-align: center; }
 .order-progress-stage:not(:last-child)::after { content: ''; position: absolute; z-index: 0; left: calc(50% + 22px); right: calc(-50% + 22px); top: 21px; height: 3px; border-radius: 4px; background: #dce7ec; }
@@ -327,6 +332,10 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .order-progress-stage-copy small { color: #6c8290; font-size: 10px; line-height: 1.35; }
 .order-history-section { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); }
 .order-history-section > h3 { margin-bottom: 18px; font-size: 15px; }
+.tracking-refreshing { display: flex; align-items: center; justify-content: flex-end; gap: 7px; margin: -10px 0 14px; color: var(--muted); font-size: 12px; }
+.tracking-refresh-error { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 11px; margin-bottom: 16px; padding: 12px 14px; border: 1px solid #efc6ca; border-radius: 14px; color: #7d2831; background: #fff6f7; font-size: 12px; }
+.tracking-refresh-error > span { display: grid; gap: 2px; }
+.tracking-refresh-error .button { min-height: 36px; padding: 7px 12px; font-size: 12px; }
 .order-timeline { margin: 0; padding: 0; list-style: none; }
 .order-timeline li { position: relative; display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding-bottom: 22px; }
 .order-timeline li:not(:last-child)::before { content: ''; position: absolute; left: 9px; top: 21px; bottom: 1px; width: 2px; background: #cae8f3; }
@@ -385,6 +394,8 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
   .order-progress-stage:not(:last-child)::after { left: 21px; right: auto; top: 44px; bottom: -17px; width: 3px; height: auto; }
   .order-progress-stage-copy { justify-items: start; align-self: center; gap: 2px; padding-block: 2px; }
   .order-progress-stage-copy strong { font-size: 14px; }
+  .tracking-refresh-error { grid-template-columns: auto minmax(0, 1fr); }
+  .tracking-refresh-error .button { grid-column: 1 / -1; width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
