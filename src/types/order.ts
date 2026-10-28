@@ -4,6 +4,25 @@ export interface OrderStatus {
   id: number
   nombre: string
   orden: number
+  codigo?: string
+  es_obligatorio?: boolean
+  es_terminal?: boolean
+  es_cancelacion?: boolean
+}
+
+export interface OrderStageService { id: number; nombre: string }
+
+export interface OrderFlowStage extends OrderStatus {
+  servicios: OrderStageService[]
+  completado: boolean
+  actual: boolean
+}
+
+export interface OwnOrderFlow {
+  estados: OrderFlowStage[]
+  siguiente_estado?: OrderStatus
+  progreso_porcentaje: number
+  cancelado: boolean
 }
 
 export interface OwnOrderSummary {
@@ -49,6 +68,7 @@ export interface OwnOrderDetail {
   observaciones?: string
   prendas: OrderGarment[]
   estado_actual: OrderStatus
+  flujo_operativo: OwnOrderFlow
 }
 
 export interface OwnOrderHistoryEntry {
