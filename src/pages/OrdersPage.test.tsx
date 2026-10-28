@@ -52,11 +52,20 @@ describe('pedidos del cliente SEL-105', () => {
     expect(listMock).toHaveBeenCalledTimes(2)
   })
 
-  it('muestra prendas, servicios, importes, fechas y timeline del pedido', async () => {
+  it('muestra prendas, servicios, progreso aplicable e historial del pedido', async () => {
     detailMock.mockResolvedValue({
       id: 7, fecha_recibido: '2026-10-15T14:00:00Z', fecha_entrega_estimada: '2026-10-18T14:00:00Z', total: 75.5,
       estado_actual: { id: 2, nombre: 'Rackeado', orden: 2 }, observaciones: 'Tratar con cuidado',
-      flujo_operativo: { estados: [], progreso_porcentaje: 0, cancelado: false },
+      flujo_operativo: {
+        estados: [
+          { id: 1, nombre: 'Recibido', codigo: 'RECIBIDO', orden: 10, servicios: [], completado: true, actual: false },
+          { id: 2, nombre: 'En lavado', codigo: 'EN_LAVADO', orden: 20, servicios: [{ id: 2, nombre: 'Lavado en seco' }], completado: true, actual: false },
+          { id: 3, nombre: 'Rackeado', codigo: 'RACKEADO', orden: 50, servicios: [], completado: true, actual: true },
+          { id: 4, nombre: 'Finalizado', codigo: 'FINALIZADO', orden: 60, servicios: [], completado: false, actual: false },
+        ],
+        progreso_porcentaje: 75,
+        cancelado: false,
+      },
       prendas: [{ id: 3, tipo_prenda_id: 1, tipo_prenda: { id: 1, nombre: 'Camisa' }, cantidad: 2, color: 'Azul', servicios: [{ id: 8, servicio_id: 2, precio_aplicado: 25, servicio: { id: 2, nombre: 'Lavado en seco', precio_base: 25 } }] }],
     })
     historyMock.mockResolvedValue([
@@ -68,6 +77,10 @@ describe('pedidos del cliente SEL-105', () => {
     expect(screen.getByRole('heading', { name: 'Camisa' })).toBeInTheDocument()
     expect(screen.getByText('Lavado en seco')).toBeInTheDocument()
     expect(screen.getByText('Tratar con cuidado')).toBeInTheDocument()
+    const progress = screen.getByRole('list', { name: 'Progreso del pedido' })
+    expect(within(progress).getAllByRole('listitem')).toHaveLength(4)
+    expect(within(progress).getByText('Rackeado').closest('li')).toHaveAttribute('aria-current', 'step')
+    expect(within(progress).queryByText('En planchado')).not.toBeInTheDocument()
     const timeline = screen.getByRole('list', { name: 'Historial de estados' })
     expect(within(timeline).getByText('Recibido')).toBeInTheDocument()
     expect(within(timeline).getByText('Listo para rack')).toBeInTheDocument()
