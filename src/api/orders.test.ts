@@ -49,3 +49,24 @@ it('consume listado, detalle e historial con el JWT del cliente', async () => {
   expect(detail.flujo_operativo.estados.map((stage) => stage.codigo)).toEqual(['RECIBIDO', 'EN_LAVADO'])
   expect(history.map((entry) => entry.estado.nombre)).toEqual(['Recibido', 'En lavado'])
 })
+
+it('normaliza pedidos históricos sin flujo ni historial nuevo', async () => {
+  useClientSession.getState().setSession({ customer: { id: 42, nombre: 'Ana' }, token: 'jwt-cliente' })
+  authenticatedApi.defaults.adapter = (async (config: InternalAxiosRequestConfig) => {
+    const data = config.url?.endsWith('historial-estados') ? null : {
+      id: 3,
+      fecha_recibido: '2024-02-10T08:00:00Z',
+      total: 35,
+      prendas: [],
+      estado_actual: { id: 3, nombre: 'Entregado', orden: 3 },
+    }
+    return { config, status: 200, statusText: 'OK', headers: {}, data }
+  }) as AxiosAdapter
+
+  const detail = await getOwnOrderDetail(3)
+  const history = await getOwnOrderHistory(3)
+
+  expect(detail.estado_actual.nombre).toBe('Entregado')
+  expect(detail.flujo_operativo).toEqual({ estados: [], siguiente_estado: undefined, progreso_porcentaje: 0, cancelado: false })
+  expect(history).toEqual([])
+})
