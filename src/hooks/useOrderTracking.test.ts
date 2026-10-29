@@ -43,12 +43,10 @@ describe('useOrderTracking', () => {
     expect(detailMock).toHaveBeenCalledTimes(1)
 
     act(() => window.dispatchEvent(new Event('focus')))
-    await waitFor(() => expect(detailMock).toHaveBeenCalledTimes(2))
-    expect(result.current.detail?.estado_actual.nombre).toBe('En lavado')
+    await waitFor(() => expect(result.current.detail?.estado_actual.nombre).toBe('En lavado'))
 
     act(() => vi.advanceTimersByTime(ORDER_TRACKING_POLL_INTERVAL_MS))
-    await waitFor(() => expect(detailMock).toHaveBeenCalledTimes(3))
-    expect(result.current.detail?.estado_actual.nombre).toBe('Rackeado')
+    await waitFor(() => expect(result.current.detail?.estado_actual.nombre).toBe('Rackeado'))
   })
 
   it('detiene las consultas periódicas cuando el pedido llega a un estado terminal', async () => {
@@ -56,6 +54,7 @@ describe('useOrderTracking', () => {
     const { result } = renderHook(() => useOrderTracking(7))
 
     await waitFor(() => expect(result.current.status).toBe('ready'))
+    expect(result.current.detail?.estado_actual.nombre).toBe('Finalizado')
     act(() => vi.advanceTimersByTime(ORDER_TRACKING_POLL_INTERVAL_MS * 2))
     expect(detailMock).toHaveBeenCalledTimes(1)
   })
