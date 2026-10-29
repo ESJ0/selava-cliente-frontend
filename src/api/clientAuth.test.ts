@@ -1,7 +1,7 @@
 import { AxiosError, type AxiosAdapter, type InternalAxiosRequestConfig } from 'axios'
 import { afterEach, expect, it } from 'vitest'
 import { api, authenticatedApi } from './client'
-import { authErrorDetails, loginClient, registerClient } from './clientAuth'
+import { adminHandoffURL, authErrorDetails, loginUnified, registerClient, requestPasswordReset, resetPassword, validatePasswordResetToken } from './clientAuth'
 
 const publicAdapter = api.defaults.adapter
 const privateAdapter = authenticatedApi.defaults.adapter
@@ -31,19 +31,37 @@ it('registra el perfil y las credenciales con el contrato del backend', async ()
 
 it('valida el JWT recibido antes de construir la sesión del cliente', async () => {
   api.defaults.adapter = (async (config) => {
-    expect(config.url).toBe('/auth/clientes/login')
+    expect(config.url).toBe('/auth/login')
     expect(JSON.parse(String(config.data))).toEqual({ email: 'ana@example.com', password: 'secreto-seguro' })
-    return response(config, { token: 'jwt-cliente' })
+    return response(config, { token: 'jwt-cliente', destino: 'cliente', usuario: { id: 9, rol_id: 4, rol: 'Cliente', cliente_id: 4, nombre: 'Ana', apellido: 'López', email: 'ana@example.com' } })
   }) satisfies AxiosAdapter
   authenticatedApi.defaults.adapter = (async (config) => {
     expect(config.url).toBe('/cliente/me')
     expect(config.headers.get('Authorization')).toBe('Bearer jwt-cliente')
-    return response(config, { cliente_id: 4 })
+    return response(config, { id: 4 })
   }) satisfies AxiosAdapter
 
-  expect(await loginClient('ana@example.com', 'secreto-seguro')).toEqual({
-    token: 'jwt-cliente', customer: { id: 4, email: 'ana@example.com' },
+  expect(await loginUnified('ana@example.com', 'secreto-seguro')).toEqual({
+    kind: 'cliente', session: { token: 'jwt-cliente', customer: { id: 4, email: 'ana@example.com', nombre: 'Ana', apellido: 'López' } },
   })
+})
+
+it('devuelve el traspaso para roles internos sin consultar el perfil cliente', async () => {
+  api.defaults.adapter = (async (config) => response(config, { token: 'jwt-admin', destino: 'admin', usuario: { id: 1, rol_id: 1, rol: 'Administrador', nombre: 'Admin', apellido: 'SeLava', email: 'admin@selava.local' } })) satisfies AxiosAdapter
+  await expect(loginUnified('admin@selava.local', 'secreto')).resolves.toEqual({ kind: 'admin', token: 'jwt-admin', roleId: 1, role: 'Administrador' })
+  expect(adminHandoffURL('jwt admin')).toBe('http://localhost:5173/auth/callback#token=jwt%20admin')
+})
+
+it('consume solicitud, validación y cambio de contraseña', async () => {
+  const calls: string[] = []
+  api.defaults.adapter = (async (config) => {
+    calls.push(`${config.method} ${config.url}`)
+    return response(config, config.url?.endsWith('/forgot') ? { mensaje: 'Revisa tu correo.' } : config.method === 'get' ? { valido: true } : { mensaje: 'Contraseña actualizada.' })
+  }) satisfies AxiosAdapter
+  await expect(requestPasswordReset('ana@example.com')).resolves.toBe('Revisa tu correo.')
+  await expect(validatePasswordResetToken('token')).resolves.toBeUndefined()
+  await expect(resetPassword('token', 'password-seguro')).resolves.toBe('Contraseña actualizada.')
+  expect(calls).toEqual(['post /auth/password/forgot', 'get /auth/password/reset/validate', 'post /auth/password/reset'])
 })
 
 it('convierte errores de validación, duplicados y red en mensajes de formulario', () => {
