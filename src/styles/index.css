@@ -410,3 +410,57 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .applied-promotions dt { font-size: 12px; color: #52717f; margin-bottom: 4px; }
 .applied-promotions dd { margin: 0; font-size: 14px; font-weight: 600; }
 @media (max-width: 600px) { .applied-promotions dl { grid-template-columns: 1fr; } }
+
+/* SEL-203: centro de notificaciones del portal cliente */
+.notification-center { position: relative; display: inline-flex; align-items: center; }
+.notification-bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: 1px solid #cfe1e8; border-radius: 50%; color: #315966; background: #fff; cursor: pointer; transition: border-color .2s ease, color .2s ease, background .2s ease; }
+.notification-bell:hover, .notification-bell[aria-expanded="true"] { border-color: #68b9d3; color: #007da9; background: #f1fbfe; }
+.notification-bell > span { position: absolute; top: -5px; right: -7px; display: grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; border: 2px solid #fff; border-radius: 999px; color: #fff; background: #dc3545; font-size: 10px; font-weight: 800; line-height: 1; }
+.notification-panel { position: absolute; z-index: 40; top: calc(100% + 12px); right: 0; width: min(400px, calc(100vw - 28px)); overflow: hidden; border: 1px solid #cfe1e8; border-radius: 18px; background: #fff; box-shadow: 0 18px 55px rgba(24, 69, 83, .2); }
+.notification-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 18px 14px; border-bottom: 1px solid #e2edf1; }
+.notification-panel h2 { margin: 0; color: #163d49; font-size: 18px; }
+.notification-panel header p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+.notification-panel header button, .notification-toolbar button, .notification-actions button, .notification-toast > button { display: inline-flex; align-items: center; justify-content: center; border: 0; color: #52717f; background: transparent; cursor: pointer; }
+.notification-panel header button { width: 32px; height: 32px; border-radius: 9px; }
+.notification-panel header button:hover, .notification-toolbar button:hover, .notification-actions button:hover, .notification-toast > button:hover { color: #007da9; background: #edf8fb; }
+.notification-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 13px; border-bottom: 1px solid #e2edf1; background: #f8fcfd; }
+.notification-toolbar button { gap: 7px; min-height: 32px; padding: 6px 8px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+.notification-toolbar button:disabled { opacity: .45; cursor: default; background: transparent; }
+.notification-list { max-height: min(430px, calc(100vh - 210px)); margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.notification-list li { position: relative; border-bottom: 1px solid #e8f0f3; background: #fff; }
+.notification-list li:last-child { border-bottom: 0; }
+.notification-list li.unread { background: #f2fbfe; }
+.notification-content { display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; align-items: start; gap: 10px; width: 100%; padding: 15px 16px 8px; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.notification-content:hover { background: rgba(0, 125, 169, .05); }
+.notification-dot { width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: transparent; }
+.unread .notification-dot { background: #00a7cf; box-shadow: 0 0 0 3px rgba(0, 167, 207, .13); }
+.notification-content strong { display: block; color: #234c58; font-size: 13px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
+.unread .notification-content strong { color: #123b48; font-weight: 750; }
+.notification-content time { display: block; margin-top: 5px; color: #708b95; font-size: 11px; }
+.notification-content > svg { margin-top: 2px; color: #6c8d98; }
+.notification-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-height: 31px; padding: 0 11px 7px 34px; }
+.notification-actions button { min-height: 27px; padding: 5px 7px; border-radius: 7px; font-size: 11px; font-weight: 700; }
+.notification-state { display: grid; justify-items: center; gap: 9px; min-height: 150px; padding: 28px 20px; color: #68858f; font-size: 13px; text-align: center; }
+.notification-state p { margin: 0; }
+.notification-state > svg:not(.state-spinner) { color: #85bdce; }
+.notification-error { color: #a1323c; }
+.notification-error button { padding: 7px 12px; border: 1px solid #df9da3; border-radius: 8px; color: #9c2933; background: #fff; cursor: pointer; }
+.notification-toasts { position: fixed; z-index: 60; top: 78px; right: 22px; display: grid; gap: 10px; width: min(360px, calc(100vw - 28px)); pointer-events: none; }
+.notification-toast { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 14px; border: 1px solid #bfe0ea; border-radius: 14px; color: #214a56; background: #fff; box-shadow: 0 14px 40px rgba(24, 69, 83, .2); animation: notification-enter .25s ease-out; pointer-events: auto; }
+.notification-toast > svg { margin-top: 2px; color: #008fb8; }
+.toast-content { display: grid; gap: 3px; min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.toast-content strong { color: #007da9; font-size: 12px; }
+.toast-content span { font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.notification-toast > button { width: 25px; height: 25px; border-radius: 7px; }
+@keyframes notification-enter { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 639px) {
+  .notification-panel { position: fixed; top: 68px; right: 10px; left: 10px; width: auto; max-height: calc(100vh - 78px); }
+  .notification-list { max-height: calc(100vh - 220px); }
+  .notification-toasts { top: 72px; right: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-bell { transition: none; }
+  .notification-toast { animation: none; }
+}

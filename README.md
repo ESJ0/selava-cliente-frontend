@@ -68,6 +68,14 @@ anterior sin subtotal muestra «No disponible» en esa fila.
 El listado, detalle, historial y tarjeta de pedido activo incluyen estados de
 carga, vacío y error, y nunca envían un `cliente_id` desde el navegador.
 
+## Notificaciones de pedidos (SEL-203)
+
+El encabezado privado incluye una campana con el total pendiente y un historial
+de notificaciones del cliente autenticado. Desde el panel se puede abrir el
+pedido relacionado, marcar una o todas como leídas y eliminar una notificación.
+El portal consulta novedades cada 30 segundos mientras la pestaña está visible y
+también al recuperar el foco; no envía un `cliente_id` desde el navegador.
+
 ## Validación
 
 ```sh

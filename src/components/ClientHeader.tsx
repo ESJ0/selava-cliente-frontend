@@ -2,6 +2,7 @@ import { House, LogOut, ShoppingBag, UserRound, Wallet } from 'lucide-react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useClientSession } from '../store/session'
 import { Logo } from './Logo'
+import { NotificationCenter } from './NotificationCenter'
 
 const navigation = [
   { to: '/inicio', label: 'Inicio', Icon: House },
@@ -32,6 +33,7 @@ export function ClientHeader() {
         </nav>
         {session && (
           <div className="session-actions">
+            <NotificationCenter />
             <Link to="/mi-perfil" className="avatar" aria-label={`Perfil de ${fullName || 'cliente'}`}>
               {initials}
             </Link>
