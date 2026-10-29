@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { LoaderCircle, LogIn } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { authErrorDetails, loginClient } from '../api/clientAuth'
+import { adminHandoffURL, authErrorDetails, loginUnified } from '../api/clientAuth'
 import { AuthShell } from '../components/AuthShell'
 import { useClientSession } from '../store/session'
 import { validateLogin } from '../utils/clientAuthValidation'
@@ -35,8 +35,12 @@ export function LoginPage() {
 
     setLoading(true)
     try {
-      const authenticatedSession = await loginClient(email.trim().toLowerCase(), password)
-      setSession(authenticatedSession)
+      const result = await loginUnified(email.trim().toLowerCase(), password)
+      if (result.kind === 'admin') {
+        window.location.assign(adminHandoffURL(result.token))
+        return
+      }
+      setSession(result.session)
       const destination = state?.from?.startsWith('/') ? state.from : '/inicio'
       navigate(destination, { replace: true })
     } catch (error) {
@@ -92,6 +96,7 @@ export function LoginPage() {
         <button className="button auth-submit" type="submit" disabled={loading}>
           {loading ? <><LoaderCircle className="loading-icon" size={18} aria-hidden="true" />Iniciando sesión...</> : <><LogIn size={18} aria-hidden="true" />Iniciar sesión</>}
         </button>
+        <Link className="forgot-password-link" to="/recuperar-contrasena">Olvidé mi contraseña</Link>
       </form>
       <p className="auth-switch">¿Aún no tienes cuenta? <Link to="/registro">Crear una cuenta</Link></p>
     </AuthShell>

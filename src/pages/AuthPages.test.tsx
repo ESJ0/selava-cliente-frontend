@@ -2,19 +2,32 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { authErrorDetails, loginClient, registerClient } from '../api/clientAuth'
+import {
+  authErrorDetails,
+  loginUnified,
+  registerClient,
+  requestPasswordReset,
+  resetPassword,
+  validatePasswordResetToken,
+} from '../api/clientAuth'
 import { AppRoutes } from '../routes/AppRoutes'
 import { useClientSession } from '../store/session'
 
 vi.mock('../api/clientAuth', () => ({
   authErrorDetails: vi.fn(),
-  loginClient: vi.fn(),
+  loginUnified: vi.fn(),
   registerClient: vi.fn(),
+  requestPasswordReset: vi.fn(),
+  resetPassword: vi.fn(),
+  validatePasswordResetToken: vi.fn(),
 }))
 
-const loginClientMock = vi.mocked(loginClient)
+const loginUnifiedMock = vi.mocked(loginUnified)
 const registerClientMock = vi.mocked(registerClient)
 const authErrorDetailsMock = vi.mocked(authErrorDetails)
+const requestPasswordResetMock = vi.mocked(requestPasswordReset)
+const resetPasswordMock = vi.mocked(resetPassword)
+const validatePasswordResetTokenMock = vi.mocked(validatePasswordResetToken)
 
 function renderRoute(path: string) {
   return render(<MemoryRouter initialEntries={[path]}><AppRoutes /></MemoryRouter>)
@@ -79,14 +92,14 @@ describe('autenticación de clientes', () => {
 
   it('inicia sesión, guarda el JWT verificado y abre el portal privado', async () => {
     const user = userEvent.setup()
-    loginClientMock.mockResolvedValue({ token: 'jwt-cliente', customer: { id: 8, email: 'ana@example.com' } })
+    loginUnifiedMock.mockResolvedValue({ kind: 'cliente', session: { token: 'jwt-cliente', customer: { id: 8, email: 'ana@example.com' } } })
     renderRoute('/login')
 
     await user.type(screen.getByLabelText('Correo electrónico'), 'ANA@EXAMPLE.COM')
     await user.type(screen.getByLabelText('Contraseña'), 'secreto-seguro')
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
-    await waitFor(() => expect(loginClientMock).toHaveBeenCalledWith('ana@example.com', 'secreto-seguro'))
+    await waitFor(() => expect(loginUnifiedMock).toHaveBeenCalledWith('ana@example.com', 'secreto-seguro'))
     expect(await screen.findByRole('heading', { name: /Hola de nuevo/ })).toBeInTheDocument()
     expect(useClientSession.getState().session?.token).toBe('jwt-cliente')
   })
@@ -94,7 +107,7 @@ describe('autenticación de clientes', () => {
   it('bloquea el formulario mientras espera y presenta credenciales inválidas', async () => {
     const user = userEvent.setup()
     let rejectLogin: (reason: Error) => void = () => undefined
-    loginClientMock.mockReturnValue(new Promise((_, reject) => { rejectLogin = reject }))
+    loginUnifiedMock.mockReturnValue(new Promise((_, reject) => { rejectLogin = reject }))
     authErrorDetailsMock.mockReturnValue({ message: 'El correo o la contraseña son incorrectos.', fields: {} })
     renderRoute('/login')
 
@@ -106,5 +119,33 @@ describe('autenticación de clientes', () => {
     rejectLogin(new Error('unauthorized'))
     expect(await screen.findByRole('alert')).toHaveTextContent('El correo o la contraseña son incorrectos.')
     expect(useClientSession.getState().session).toBeNull()
+  })
+
+  it('solicita un enlace de recuperación sin revelar si la cuenta existe', async () => {
+    const user = userEvent.setup()
+    requestPasswordResetMock.mockResolvedValue('Si el correo existe, recibirás un enlace para restablecer tu contraseña.')
+    renderRoute('/recuperar-contrasena')
+
+    await user.type(screen.getByLabelText('Correo electrónico'), 'ANA@EXAMPLE.COM')
+    await user.click(screen.getByRole('button', { name: 'Enviar enlace' }))
+
+    await waitFor(() => expect(requestPasswordResetMock).toHaveBeenCalledWith('ana@example.com'))
+    expect(screen.getByRole('status')).toHaveTextContent('Si el correo existe')
+  })
+
+  it('valida el token y permite establecer una contraseña nueva', async () => {
+    const user = userEvent.setup()
+    validatePasswordResetTokenMock.mockResolvedValue()
+    resetPasswordMock.mockResolvedValue('Contraseña actualizada correctamente.')
+    renderRoute('/restablecer-contrasena?token=token-seguro')
+
+    await screen.findByLabelText('Nueva contraseña')
+    await user.type(screen.getByLabelText('Nueva contraseña'), 'nueva-segura')
+    await user.type(screen.getByLabelText('Confirmar contraseña'), 'nueva-segura')
+    await user.click(screen.getByRole('button', { name: 'Cambiar contraseña' }))
+
+    await waitFor(() => expect(validatePasswordResetTokenMock).toHaveBeenCalledWith('token-seguro', expect.any(AbortSignal)))
+    expect(resetPasswordMock).toHaveBeenCalledWith('token-seguro', 'nueva-segura')
+    expect(await screen.findByRole('status')).toHaveTextContent('Contraseña actualizada correctamente.')
   })
 })

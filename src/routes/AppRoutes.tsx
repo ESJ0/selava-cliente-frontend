@@ -5,6 +5,8 @@ import { ProtectedClientRoute } from '../components/ProtectedClientRoute'
 import { HomePage } from '../pages/HomePage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
+import { ResetPasswordPage } from '../pages/ResetPasswordPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { OrderDetailPage } from '../pages/OrderDetailPage'
 import { OrdersPage } from '../pages/OrdersPage'
@@ -21,6 +23,8 @@ const standaloneTitles: Record<string, string> = {
   '/': 'Inicio',
   '/inicio': 'Portal de clientes',
   '/login': 'Iniciar sesión',
+  '/recuperar-contrasena': 'Recuperar contraseña',
+  '/restablecer-contrasena': 'Nueva contraseña',
   '/registro': 'Crear cuenta',
   '/pagos': 'Mis pagos',
 }
@@ -39,6 +43,8 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
+      <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
       <Route path="/registro" element={<RegisterPage />} />
       <Route element={<ProtectedClientRoute />}>
         <Route element={<ClientLayout />}>

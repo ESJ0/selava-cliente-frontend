@@ -25,10 +25,20 @@ interface RegisteredClientResponse {
 
 interface LoginResponse {
   token: string
+  destino: 'cliente' | 'admin'
+  usuario: {
+    id: number
+    rol_id: number
+    rol: string
+    cliente_id?: number
+    nombre: string
+    apellido: string
+    email: string
+  }
 }
 
 interface ClientIdentityResponse {
-  cliente_id: number
+  id: number
 }
 
 interface ApiFieldError {
@@ -51,17 +61,43 @@ export async function registerClient(data: ClientRegistration): Promise<Register
   return response.data
 }
 
-export async function loginClient(email: string, password: string): Promise<ClientSession> {
-  const loginResponse = await api.post<LoginResponse>('/auth/clientes/login', { email, password })
+export type UnifiedLoginResult =
+  | { kind: 'cliente'; session: ClientSession }
+  | { kind: 'admin'; token: string; roleId: number; role: string }
+
+export async function loginUnified(email: string, password: string): Promise<UnifiedLoginResult> {
+  const loginResponse = await api.post<LoginResponse>('/auth/login', { email, password })
   const token = loginResponse.data.token
+  if (loginResponse.data.destino === 'admin') {
+    return { kind: 'admin', token, roleId: loginResponse.data.usuario.rol_id, role: loginResponse.data.usuario.rol }
+  }
   const identityResponse = await authenticatedApi.get<ClientIdentityResponse>('/cliente/me', {
     headers: { Authorization: `Bearer ${token}` },
   })
 
-  return {
+  return { kind: 'cliente', session: {
     token,
-    customer: { id: identityResponse.data.cliente_id, email: email.trim().toLowerCase() },
-  }
+    customer: { id: identityResponse.data.id, email: loginResponse.data.usuario.email, nombre: loginResponse.data.usuario.nombre, apellido: loginResponse.data.usuario.apellido },
+  } }
+}
+
+export function adminHandoffURL(token: string): string {
+  const adminURL = (import.meta.env.VITE_ADMIN_URL || 'http://localhost:5173').replace(/\/+$/, '')
+  return `${adminURL}/auth/callback#token=${encodeURIComponent(token)}`
+}
+
+export async function requestPasswordReset(email: string): Promise<string> {
+  const { data } = await api.post<{ mensaje: string }>('/auth/password/forgot', { email })
+  return data.mensaje
+}
+
+export async function validatePasswordResetToken(token: string, signal?: AbortSignal): Promise<void> {
+  await api.get('/auth/password/reset/validate', { params: { token }, signal })
+}
+
+export async function resetPassword(token: string, password: string): Promise<string> {
+  const { data } = await api.post<{ mensaje: string }>('/auth/password/reset', { token, password })
+  return data.mensaje
 }
 
 export function authErrorDetails(error: unknown, fallback: string): AuthErrorDetails {
