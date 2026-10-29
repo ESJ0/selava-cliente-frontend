@@ -28,7 +28,9 @@ este origen, por ejemplo:
 ## Rutas principales
 
 - `/`: Landing Page pública.
-- `/login`: formulario de inicio de sesión conectado a la API de clientes.
+- `/login`: acceso único para Cliente, Administrador, Recepcionista y Operario.
+- `/recuperar-contrasena`: solicitud de enlace por correo.
+- `/restablecer-contrasena`: cambio mediante token de un solo uso.
 - `/registro`: formulario para crear el perfil y la cuenta de cliente.
 - `/inicio`: Home privado del portal de clientes.
 - `/mis-pedidos`: listado de pedidos propios; cada pedido abre su detalle y
@@ -51,7 +53,8 @@ centralizados en `src/content/publicSite.ts`. Los precios por tipo de prenda pro
 siempre del endpoint público y no se duplican en el frontend.
 
 El registro consume `POST /api/auth/clientes/registro`. El login usa
-`POST /api/auth/clientes/login` y comprueba el JWT recibido mediante
+`POST /api/auth/login`: Cliente permanece en el portal y los roles internos se
+redirigen al callback seguro del admin. Para Cliente se comprueba el JWT mediante
 `GET /api/cliente/me` antes de guardar la sesión. El token se conserva en
 `sessionStorage`, por lo que se elimina al cerrar la pestaña; las contraseñas
 nunca se almacenan.
