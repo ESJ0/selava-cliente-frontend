@@ -38,11 +38,11 @@ it('valida el JWT recibido antes de construir la sesión del cliente', async () 
   authenticatedApi.defaults.adapter = (async (config) => {
     expect(config.url).toBe('/cliente/me')
     expect(config.headers.get('Authorization')).toBe('Bearer jwt-cliente')
-    return response(config, { cliente_id: 4 })
+    return response(config, { id: 4, nombre: 'Ana', apellido: 'López', email: 'ana@example.com' })
   }) satisfies AxiosAdapter
 
   expect(await loginClient('ana@example.com', 'secreto-seguro')).toEqual({
-    token: 'jwt-cliente', customer: { id: 4, email: 'ana@example.com' },
+    token: 'jwt-cliente', customer: { id: 4, nombre: 'Ana', apellido: 'López', email: 'ana@example.com' },
   })
 })
 

@@ -28,7 +28,10 @@ interface LoginResponse {
 }
 
 interface ClientIdentityResponse {
-  cliente_id: number
+  id: number
+  nombre: string
+  apellido: string
+  email?: string
 }
 
 interface ApiFieldError {
@@ -60,7 +63,12 @@ export async function loginClient(email: string, password: string): Promise<Clie
 
   return {
     token,
-    customer: { id: identityResponse.data.cliente_id, email: email.trim().toLowerCase() },
+    customer: {
+      id: identityResponse.data.id,
+      nombre: identityResponse.data.nombre,
+      apellido: identityResponse.data.apellido,
+      email: identityResponse.data.email ?? email.trim().toLowerCase(),
+    },
   }
 }
 

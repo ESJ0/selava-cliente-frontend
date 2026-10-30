@@ -321,3 +321,35 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 @media (prefers-reduced-motion: reduce) {
   .state-spinner { animation: none; }
 }
+
+/* Perfil del cliente */
+.profile-page { display: grid; gap: 18px; }
+.profile-page > .page-heading { margin-bottom: 0; }
+.profile-photo-card { display: flex; align-items: center; gap: 22px; }
+.profile-photo { width: 92px; height: 92px; flex: none; display: grid; place-items: center; overflow: hidden; border-radius: 50%; color: #fff; background: linear-gradient(145deg, #008fca, #08bdd9); font-size: 27px; font-weight: 800; }
+.profile-photo img { width: 100%; height: 100%; object-fit: cover; }
+.profile-photo-card h2, .profile-section h2 { margin: 0 0 6px; font-size: 19px; }
+.profile-photo-card p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+.profile-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.profile-delete { color: #b22f3f; background: #fff0f2; }
+.profile-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); gap: 18px; align-items: start; }
+.profile-section > h2 { display: flex; align-items: center; gap: 9px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+.profile-section > h2 svg { color: #0088bc; }
+.profile-form { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; margin-top: 20px; }
+.profile-form label { display: grid; gap: 7px; color: #48627a; font-size: 13px; font-weight: 700; }
+.profile-form input { width: 100%; min-height: 45px; padding: 0 13px; border: 1px solid var(--border); border-radius: 12px; outline: none; background: #fff; }
+.profile-form input:focus { border-color: #008fc5; box-shadow: 0 0 0 3px #008fc518; }
+.profile-wide { grid-column: 1 / -1; }
+.profile-submit { width: fit-content; color: #fff; background: #008fc5; }
+.password-form { grid-template-columns: 1fr; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 850px) {
+  .profile-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .profile-photo-card { align-items: flex-start; }
+  .profile-photo { width: 72px; height: 72px; }
+  .profile-form { grid-template-columns: 1fr; }
+  .profile-wide { grid-column: auto; }
+}

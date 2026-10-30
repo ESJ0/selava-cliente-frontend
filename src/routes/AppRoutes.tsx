@@ -8,12 +8,12 @@ import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { OrderDetailPage } from '../pages/OrderDetailPage'
 import { OrdersPage } from '../pages/OrdersPage'
+import { ProfilePage } from '../pages/ProfilePage'
 import { RegisterPage } from '../pages/RegisterPage'
 import { UpcomingPage } from '../pages/UpcomingPage'
 
 const upcoming = [
   { path: '/pagos', title: 'Mis pagos', description: 'Pronto podrás consultar los pagos de tus pedidos al acceder a tu cuenta.' },
-  { path: '/mi-perfil', title: 'Mi perfil', description: 'Pronto podrás consultar los datos de tu cuenta.' },
   { path: '/servicios', title: 'Nuestros servicios', description: 'Pronto podrás conocer nuestro catálogo y encontrar el cuidado que tus prendas necesitan.' },
 ]
 
@@ -44,6 +44,7 @@ export function AppRoutes() {
           <Route path="/inicio" element={<HomePage />} />
           <Route path="/mis-pedidos" element={<OrdersPage />} />
           <Route path="/mis-pedidos/:pedidoID" element={<OrderDetailPage />} />
+          <Route path="/mi-perfil" element={<ProfilePage />} />
           {upcoming.map(({ path, title, description }) => <Route key={path} path={path} element={<UpcomingPage title={title} description={description} />} />)}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
