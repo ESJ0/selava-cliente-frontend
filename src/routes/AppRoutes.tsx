@@ -11,11 +11,11 @@ import { NotFoundPage } from '../pages/NotFoundPage'
 import { OrderDetailPage } from '../pages/OrderDetailPage'
 import { OrdersPage } from '../pages/OrdersPage'
 import { PaymentsPage } from '../pages/PaymentsPage'
+import { ProfilePage } from '../pages/ProfilePage'
 import { RegisterPage } from '../pages/RegisterPage'
 import { UpcomingPage } from '../pages/UpcomingPage'
 
 const upcoming = [
-  { path: '/mi-perfil', title: 'Mi perfil', description: 'Pronto podrás consultar los datos de tu cuenta.' },
   { path: '/servicios', title: 'Nuestros servicios', description: 'Pronto podrás conocer nuestro catálogo y encontrar el cuidado que tus prendas necesitan.' },
 ]
 
@@ -27,6 +27,7 @@ const standaloneTitles: Record<string, string> = {
   '/restablecer-contrasena': 'Nueva contraseña',
   '/registro': 'Crear cuenta',
   '/pagos': 'Mis pagos',
+  '/mi-perfil': 'Mi perfil',
 }
 
 export function AppRoutes() {
@@ -52,6 +53,7 @@ export function AppRoutes() {
           <Route path="/mis-pedidos" element={<OrdersPage />} />
           <Route path="/mis-pedidos/:pedidoID" element={<OrderDetailPage />} />
           <Route path="/pagos" element={<PaymentsPage />} />
+          <Route path="/mi-perfil" element={<ProfilePage />} />
           {upcoming.map(({ path, title, description }) => <Route key={path} path={path} element={<UpcomingPage title={title} description={description} />} />)}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
