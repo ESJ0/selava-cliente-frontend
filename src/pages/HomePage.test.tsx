@@ -7,6 +7,10 @@ import { AppRoutes } from '../routes/AppRoutes'
 import { useClientSession } from '../store/session'
 
 vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn() }))
+vi.mock('../api/profile', () => ({
+  getClientProfile: vi.fn().mockResolvedValue({ id: 7, nombre: 'Ana', apellido: 'Pérez', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', activo: true, tiene_foto_perfil: false }),
+  getClientProfilePhoto: vi.fn(), updateClientProfile: vi.fn(), changeClientPassword: vi.fn(), uploadClientProfilePhoto: vi.fn(), deleteClientProfilePhoto: vi.fn(),
+}))
 const getOwnOrdersMock = vi.mocked(getOwnOrders)
 
 function renderPortal(path = '/inicio') {
@@ -127,7 +131,8 @@ describe('Home SEL-94', () => {
     for (let step = 0; step < 8 && document.activeElement !== link; step++) await user.tab()
     expect(link).toHaveFocus()
     await user.keyboard('{Enter}')
-    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
+    expect(document.title).toBe(`${title} | SeLava`)
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 })
