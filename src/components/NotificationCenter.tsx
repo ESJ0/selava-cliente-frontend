@@ -1,11 +1,12 @@
-import { Bell, CheckCheck, ExternalLink, LoaderCircle, RefreshCw, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { deleteOwnNotification, getOwnNotifications, markAllOwnNotificationsRead, markOwnNotificationRead } from '../api/notifications'
 import { errorMessage } from '../api/client'
 import type { ClientNotification, ClientNotificationsResponse } from '../types/notification'
+import { formatDateTime } from '../utils/portal'
+import { BellIcon, CloseIcon, IronIcon, RefreshIcon, SpinnerIcon, TrashIcon } from './portal/icons'
 
-const dateTime = new Intl.DateTimeFormat('es-GT', { dateStyle: 'medium', timeStyle: 'short' })
 const POLL_INTERVAL_MS = 30_000
 
 export function NotificationCenter() {
@@ -108,35 +109,43 @@ export function NotificationCenter() {
     }
   }
 
-  return <div className="notification-center" ref={container}>
-    <button className="notification-bell" type="button" aria-label={`Notificaciones: ${data.no_leidas} sin leer`} aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-      <Bell size={19} aria-hidden="true"/>{data.no_leidas > 0 && <span>{data.no_leidas > 99 ? '99+' : data.no_leidas}</span>}
+  const visible = data.no_leidas > 99 ? '99+' : String(data.no_leidas)
+  return <div ref={container}>
+    <button className="cp-ib" type="button" aria-label={`Notificaciones: ${data.no_leidas} sin leer`} aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+      <BellIcon className="cp-bell" size={22} />
+      {data.no_leidas > 0 && <span className="cp-badge" aria-hidden="true"><span className="cp-ping" /><span className="cp-badge-n">{visible}</span></span>}
     </button>
 
-    {open && <section className="notification-panel" aria-label="Panel de notificaciones">
-      <header><div><h2>Notificaciones</h2><p>{data.no_leidas ? `${data.no_leidas} sin leer` : 'Estás al día'}</p></div>
-        <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar notificaciones"><X size={19}/></button></header>
-      <div className="notification-toolbar">
-        <button type="button" disabled={!data.no_leidas} onClick={() => void markAllRead()}><CheckCheck size={16}/>Marcar todas como leídas</button>
-        <button type="button" onClick={() => void refresh()} aria-label="Actualizar notificaciones"><RefreshCw size={16}/></button>
-      </div>
-      {loading ? <div className="notification-state" role="status"><LoaderCircle className="state-spinner"/>Cargando notificaciones…</div>
-        : error ? <div className="notification-state notification-error" role="alert"><p>{error}</p><button type="button" onClick={() => void refresh()}>Reintentar</button></div>
-        : !data.notificaciones.length ? <div className="notification-state"><Bell/><p>Aún no tienes notificaciones.</p></div>
-        : <ul className="notification-list">{data.notificaciones.map((notification) => <li key={notification.id} className={notification.leida ? 'read' : 'unread'}>
-          <button className="notification-content" type="button" onClick={() => void (notification.pedido_id ? openOrder(notification) : markRead(notification))}>
-            <span className="notification-dot"/><span><strong>{notification.mensaje}</strong><time dateTime={notification.created_at}>{dateTime.format(new Date(notification.created_at))}</time></span>
-            {notification.pedido_id && <ExternalLink size={15} aria-hidden="true"/>}</button>
-          <div className="notification-actions">
+    {open && <section className="cp-drop" aria-label="Panel de notificaciones">
+      <header className="cp-drop-head">
+        <div><h2>Notificaciones</h2><p>{data.no_leidas ? `${data.no_leidas} sin leer` : 'Estás al día'}</p></div>
+        <div className="cp-drop-tools">
+          <button type="button" onClick={() => void refresh()} aria-label="Actualizar notificaciones"><RefreshIcon size={17} /></button>
+          <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar notificaciones"><CloseIcon size={17} /></button>
+        </div>
+      </header>
+      {loading ? <div className="cp-drop-state" role="status"><SpinnerIcon className="cp-spin" size={24} />Cargando notificaciones…</div>
+        : error ? <div className="cp-drop-state" role="alert"><p>{error}</p><button type="button" onClick={() => void refresh()}>Reintentar</button></div>
+        : !data.notificaciones.length ? <div className="cp-drop-state"><BellIcon size={28} /><p>Aún no tienes notificaciones.</p></div>
+        : <ul className="cp-notes">{data.notificaciones.map((notification) => <li key={notification.id} className={`cp-note ${notification.leida ? 'read' : 'unread'}`}>
+          <button className="cp-note-main" type="button" onClick={() => void (notification.pedido_id ? openOrder(notification) : markRead(notification))}>
+            <span className="cp-note-ic"><IronIcon size={18} /></span>
+            <span className="cp-note-text"><strong>{notification.mensaje}</strong><time dateTime={notification.created_at}>{formatDateTime(notification.created_at)}</time></span>
+          </button>
+          <div className="cp-note-actions">
             {!notification.leida && <button type="button" onClick={() => void markRead(notification)}>Marcar como leída</button>}
-            <button type="button" onClick={() => void remove(notification)} aria-label={`Eliminar notificación ${notification.id}`}><Trash2 size={15}/></button>
+            <button className="cp-del" type="button" onClick={() => void remove(notification)} aria-label={`Eliminar notificación ${notification.id}`}><TrashIcon size={16} /></button>
           </div>
         </li>)}</ul>}
+      {!loading && !error && data.notificaciones.length > 0 && (
+        <button className="cp-drop-all" type="button" disabled={!data.no_leidas} onClick={() => void markAllRead()}>Marcar todas como leídas</button>
+      )}
     </section>}
 
-    <div className="notification-toasts" aria-live="polite">{toasts.map((notification) => <article key={notification.id} className="notification-toast">
-      <Bell size={19} aria-hidden="true"/><button className="toast-content" type="button" onClick={() => void (notification.pedido_id ? openOrder(notification) : markRead(notification))}><strong>Nueva notificación</strong><span>{notification.mensaje}</span></button>
-      <button type="button" aria-label="Cerrar aviso" onClick={() => setToasts((current) => current.filter((item) => item.id !== notification.id))}><X size={16}/></button>
-    </article>)}</div>
+    {createPortal(<div className="cp-toasts cp-portal-layer" aria-live="polite">{toasts.map((notification) => <article key={notification.id} className="cp-toast">
+      <span className="cp-tk2"><BellIcon size={18} /></span>
+      <button className="cp-toast-body" type="button" onClick={() => void (notification.pedido_id ? openOrder(notification) : markRead(notification))}><small>Nueva notificación</small><span>{notification.mensaje}</span></button>
+      <button className="cp-toast-x" type="button" aria-label="Cerrar aviso" onClick={() => setToasts((current) => current.filter((item) => item.id !== notification.id))}><CloseIcon size={16} /></button>
+    </article>)}</div>, document.body)}
   </div>
 }

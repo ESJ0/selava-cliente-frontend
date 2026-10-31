@@ -1,44 +1,59 @@
-import { House, LogOut, ShoppingBag, UserRound, Wallet } from 'lucide-react'
+import { useEffect } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { getClientProfile } from '../api/profile'
 import { useClientSession } from '../store/session'
-import { Logo } from './Logo'
+import { initialsOf } from '../utils/portal'
+import { BrandMark } from './BrandMark'
 import { NotificationCenter } from './NotificationCenter'
+import { BagIcon, CardIcon, HomeIcon, LogoutIcon, UserIcon } from './portal/icons'
 
 const navigation = [
-  { to: '/inicio', label: 'Inicio', Icon: House },
-  { to: '/mis-pedidos', label: 'Mis pedidos', Icon: ShoppingBag },
-  { to: '/pagos', label: 'Pagos', Icon: Wallet },
-  { to: '/mi-perfil', label: 'Mi perfil', Icon: UserRound },
+  { to: '/inicio', label: 'Inicio', Icon: HomeIcon },
+  { to: '/mis-pedidos', label: 'Mis pedidos', Icon: BagIcon },
+  { to: '/pagos', label: 'Pagos', Icon: CardIcon },
+  { to: '/mi-perfil', label: 'Mi perfil', Icon: UserIcon },
 ]
 
 export function ClientHeader() {
   const session = useClientSession((state) => state.session)
+  const setSession = useClientSession((state) => state.setSession)
   const clearSession = useClientSession((state) => state.clearSession)
   const navigate = useNavigate()
   const fullName = [session?.customer.nombre, session?.customer.apellido].filter(Boolean).join(' ')
-  const initials = fullName
-    ? fullName.split(' ').slice(0, 2).map((part) => part.charAt(0)).join('')
-    : session?.customer.email?.charAt(0).toUpperCase() ?? 'C'
+  const initials = fullName ? initialsOf(fullName) : session?.customer.email?.charAt(0).toUpperCase() ?? 'C'
+  const missingName = Boolean(session && !session.customer.nombre)
+
+  // El login no expone el perfil: se completa el nombre real del cliente una sola vez.
+  useEffect(() => {
+    if (!missingName) return
+    let active = true
+    getClientProfile()
+      .then((profile) => {
+        const current = useClientSession.getState().session
+        if (!active || !current) return
+        setSession({ ...current, customer: { ...current.customer, nombre: profile.nombre, apellido: profile.apellido, email: profile.email } })
+      })
+      .catch(() => undefined)
+    return () => { active = false }
+  }, [missingName, setSession])
 
   return (
-    <header className="client-header">
-      <div className="header-inner">
-        <Link to="/inicio" className="logo-link" aria-label="SeLava, ir al inicio"><Logo /></Link>
-        <nav aria-label="Navegación principal">
+    <header className="cp-header">
+      <div className="cp-nav">
+        <Link to="/inicio" className="cp-brand" aria-label="SeLava, ir al inicio"><BrandMark /></Link>
+        <nav className="cp-navs" aria-label="Navegación principal">
           {navigation.map(({ to, label, Icon }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
-              <Icon size={15} strokeWidth={1.7} aria-hidden="true" /><span>{label}</span>
+            <NavLink key={to} to={to} className={({ isActive }) => `cp-nl${isActive ? ' on' : ''}`}>
+              <Icon size={18} />{label}
             </NavLink>
           ))}
         </nav>
         {session && (
-          <div className="session-actions">
+          <div className="cp-session">
             <NotificationCenter />
-            <Link to="/mi-perfil" className="avatar" aria-label={`Perfil de ${fullName || 'cliente'}`}>
-              {initials}
-            </Link>
-            <button className="icon-button" aria-label="Cerrar sesión" onClick={() => { clearSession(); navigate('/login') }}>
-              <LogOut size={17} aria-hidden="true" />
+            <Link to="/mi-perfil" className="cp-avatar" aria-label={`Perfil de ${fullName || 'cliente'}`}>{initials}</Link>
+            <button className="cp-ib" type="button" aria-label="Cerrar sesión" onClick={() => { clearSession(); navigate('/login') }}>
+              <LogoutIcon size={20} />
             </button>
           </div>
         )}

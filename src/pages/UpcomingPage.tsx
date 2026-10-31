@@ -1,18 +1,16 @@
-import { ArrowLeft } from 'lucide-react'
-import { ButtonLink } from '../components/Button'
-import { Card } from '../components/Card'
+import { Link } from 'react-router-dom'
+import { ArrowLeftIcon } from '../components/portal/icons'
 
 // Solo evita rutas rotas. Cada funcionalidad se implementara en su historia.
 export function UpcomingPage({ title, description }: { title: string; description: string }) {
   return (
-    <>
-      <div className="page-heading"><h1>{title}</h1></div>
-      <Card className="upcoming-card">
-        <span className="upcoming-badge">Próximamente</span>
-        <h2>Estamos preparando este espacio</h2>
-        <p>{description}</p>
-        <ButtonLink to="/inicio" className="button-secondary"><ArrowLeft size={16} aria-hidden="true" />Volver al inicio</ButtonLink>
-      </Card>
-    </>
+    <div className="cp-main">
+      <section className="cp-blank cp-st">
+        <span className="cp-badge-soft">Próximamente</span>
+        <h1 className="cp-disp">{title}</h1>
+        <p><strong>Estamos preparando este espacio.</strong> {description}</p>
+        <Link className="cp-btn-dark" to="/inicio"><ArrowLeftIcon size={16} />Volver al inicio</Link>
+      </section>
+    </div>
   )
 }

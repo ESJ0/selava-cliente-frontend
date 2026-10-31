@@ -42,6 +42,7 @@ describe('ProfilePage SEL-115', () => {
     const user = userEvent.setup()
     render(<MemoryRouter><ProfilePage/></MemoryRouter>)
     await screen.findByDisplayValue('Ana')
+    await user.click(screen.getByRole('tab', { name: 'Contraseña' }))
     await user.type(screen.getByLabelText('Contraseña actual'), 'anterior-segura')
     await user.type(screen.getByLabelText('Nueva contraseña'), 'nueva-muy-segura')
     await user.type(screen.getByLabelText('Confirmar nueva contraseña'), 'nueva-muy-segura')

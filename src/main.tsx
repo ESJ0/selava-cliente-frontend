@@ -5,6 +5,7 @@ import { AppRoutes } from './routes/AppRoutes'
 import './styles/index.css'
 import './styles/landing.css'
 import './styles/auth.css'
+import './styles/portal.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

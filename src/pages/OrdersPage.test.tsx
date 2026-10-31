@@ -36,12 +36,12 @@ describe('pedidos del cliente SEL-105', () => {
       total: 1, pagina: 1, limite: 100,
     })
     renderAt('/mis-pedidos')
-    const link = await screen.findByRole('link', { name: 'Ver pedido SLV-0007' })
-    expect(link).toHaveAttribute('href', '/mis-pedidos/7')
-    const summary = within(link).getByRole('status', { name: 'Estado actual: Rackeado' })
-    expect(summary).toBeVisible()
-    expect(summary.querySelector('svg')).toHaveClass('lucide-list-checks')
-    expect(within(link).getByText(/75[.,]50/)).toBeInTheDocument()
+    const user = userEvent.setup()
+    const ticket = within((await screen.findByRole('heading', { name: 'SLV-0007' })).closest('article')!)
+    expect(ticket.getByRole('status', { name: 'Estado actual: Rackeado' })).toHaveTextContent('Rackeado')
+    expect(ticket.getByText(/75[.,]50/)).toBeInTheDocument()
+    await user.click(ticket.getByRole('button', { name: 'Ver detalle' }))
+    expect(ticket.getByRole('link', { name: /Ver pedido completo/ })).toHaveAttribute('href', '/mis-pedidos/7')
   })
 
   it('muestra error y permite reintentar', async () => {
@@ -86,5 +86,30 @@ describe('pedidos del cliente SEL-105', () => {
     const timeline = screen.getByRole('list', { name: 'Historial de estados' })
     expect(within(timeline).getByText('Recibido')).toBeInTheDocument()
     expect(within(timeline).getByText('Listo para rack')).toBeInTheDocument()
+  })
+
+  it('filtra por estado y busca por código sin consultar de nuevo la API', async () => {
+    const user = userEvent.setup()
+    listMock.mockResolvedValue({
+      pedidos: [
+        { id: 15, fecha_recibido: '2026-10-30T14:00:00Z', total: 300, estado_actual: { id: 3, nombre: 'En planchado', orden: 3 } },
+        { id: 9, fecha_recibido: '2026-10-01T14:00:00Z', total: 50, estado_actual: { id: 5, nombre: 'Entregado', orden: 5 } },
+      ],
+      total: 2, pagina: 1, limite: 100,
+    })
+    renderAt('/mis-pedidos')
+    expect(await screen.findByRole('heading', { name: 'SLV-0015' })).toBeInTheDocument()
+    expect(screen.getByText(/Q\s*350\.00/)).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /Entregados/ }))
+    expect(screen.queryByRole('heading', { name: 'SLV-0015' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'SLV-0009' })).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /Todos/ }))
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar pedido' }), 'slv-0015')
+    expect(screen.getByRole('heading', { name: 'SLV-0015' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'SLV-0009' })).not.toBeInTheDocument()
+    await user.clear(screen.getByRole('searchbox', { name: 'Buscar pedido' }))
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar pedido' }), 'SLV-9999')
+    expect(screen.getByRole('heading', { name: 'No encontramos ese pedido' })).toBeInTheDocument()
+    expect(listMock).toHaveBeenCalledTimes(1)
   })
 })

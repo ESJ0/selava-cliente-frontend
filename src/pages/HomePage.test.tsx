@@ -6,7 +6,7 @@ import { getOwnOrders } from '../api/orders'
 import { AppRoutes } from '../routes/AppRoutes'
 import { useClientSession } from '../store/session'
 
-vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn() }))
+vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn(), getOwnOrderDetail: vi.fn().mockRejectedValue(new Error('sin detalle')) }))
 vi.mock('../api/profile', () => ({
   getClientProfile: vi.fn().mockResolvedValue({ id: 7, nombre: 'Ana', apellido: 'Pérez', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', activo: true, tiene_foto_perfil: false }),
   getClientProfilePhoto: vi.fn(), updateClientProfile: vi.fn(), changeClientPassword: vi.fn(), uploadClientProfilePhoto: vi.fn(), deleteClientProfilePhoto: vi.fn(),
@@ -38,7 +38,7 @@ describe('Home SEL-94', () => {
     expect(screen.getByRole('heading', { name: /Hola, Ana/ })).toBeInTheDocument()
     expect(screen.getByText('Así va tu ropa.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Tu ropa limpia, cuidada y lista cuando la necesitas.' })).toBeInTheDocument()
-    expect(screen.getByText('Lavandería y Dry Clean')).toBeInTheDocument()
+    expect(screen.getByText('SeLava · Lavandería y Dry Clean')).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'No tienes pedidos activos.' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
     expect(screen.queryByText(/SLV-0249|Q145|María/)).not.toBeInTheDocument()
@@ -60,7 +60,7 @@ describe('Home SEL-94', () => {
     useClientSession.getState().setSession(testSession)
     renderPortal()
     await user.click(screen.getByRole('link', { name: 'Ver mis pedidos' }))
-    expect(screen.getByRole('heading', { name: 'Mis pedidos' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mis pedidos.' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Aún no tienes pedidos.' })).toBeInTheDocument()
     await user.click(screen.getByRole('link', { name: 'Inicio' }))
     expect(screen.getByRole('heading', { name: /Hola, Ana/ })).toBeInTheDocument()
@@ -120,10 +120,10 @@ describe('Home SEL-94', () => {
   })
 
   it.each([
-    ['Mis pedidos', 'Mis pedidos'],
-    ['Pagos', 'Mis pagos'],
-    ['Mi perfil', 'Mi perfil'],
-  ])('permite navegar por teclado a %s sin ocultar el destino', async (label, title) => {
+    ['Mis pedidos', 'Mis pedidos.', 'Mis pedidos'],
+    ['Pagos', 'Mis pagos.', 'Mis pagos'],
+    ['Mi perfil', 'Mi perfil.', 'Mi perfil'],
+  ])('permite navegar por teclado a %s sin ocultar el destino', async (label, heading, title) => {
     const user = userEvent.setup()
     useClientSession.getState().setSession(testSession)
     renderPortal()
@@ -131,7 +131,7 @@ describe('Home SEL-94', () => {
     for (let step = 0; step < 8 && document.activeElement !== link; step++) await user.tab()
     expect(link).toHaveFocus()
     await user.keyboard('{Enter}')
-    expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument()
     expect(document.title).toBe(`${title} | SeLava`)
     expect(link).toHaveAttribute('aria-current', 'page')
   })

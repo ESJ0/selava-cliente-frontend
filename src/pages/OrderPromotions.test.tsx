@@ -32,12 +32,12 @@ it.each([
 })
 it('presenta el subtotal persistido aunque no coincida con una reconstrucción local', async () => {
   vi.mocked(getOwnOrderDetail).mockResolvedValue({ ...order, prendas: [{ ...order.prendas[0], subtotal: 137.42 }], promociones_aplicadas: [{ ...applied, subtotal_total: 42.37 }] })
-  renderDetail(); expect(await screen.findByText(/Q\s*42\.37/)).toBeInTheDocument(); expect(screen.getByText(/Q\s*137\.42/)).toBeInTheDocument(); expect(screen.getByText(/Q\s*105\.00/)).toBeInTheDocument()
+  renderDetail(); expect(await screen.findByText(/Q\s*42\.37/)).toBeInTheDocument(); expect(screen.getAllByText(/Q\s*137\.42/).length).toBeGreaterThan(0); expect(screen.getAllByText(/Q\s*105\.00/).length).toBeGreaterThan(0)
   expect(screen.queryByText(/125\.00/)).not.toBeInTheDocument()
 })
 it('conserva el detalle de un pedido sin promociones', async () => {
   vi.mocked(getOwnOrderDetail).mockResolvedValue({ ...order, promociones_aplicadas: [] })
-  renderDetail(); await screen.findByText('Nombre actual'); expect(screen.queryByRole('region', { name: 'Promociones aplicadas' })).not.toBeInTheDocument(); expect(screen.getByText(/125\.00/)).toBeInTheDocument()
+  renderDetail(); await screen.findByText('Nombre actual'); expect(screen.queryByRole('region', { name: 'Promociones aplicadas' })).not.toBeInTheDocument(); expect(screen.getAllByText(/125\.00/).length).toBeGreaterThan(0)
 })
 it('mantiene carga y error sin mostrar un desglose inexistente', async () => {
   vi.mocked(getOwnOrderDetail).mockRejectedValue(new Error('network'))
