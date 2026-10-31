@@ -28,7 +28,7 @@ beforeEach(() => {
 describe('Home SEL-94', () => {
   it('redirige al login cuando no existe una sesión de cliente', () => {
     renderPortal()
-    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Hola de nuevo.' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Navegación principal' })).not.toBeInTheDocument()
   })
 
@@ -103,7 +103,7 @@ describe('Home SEL-94', () => {
     renderPortal()
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
     expect(useClientSession.getState().session).toBeNull()
-    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Hola de nuevo.' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument()
   })
 

@@ -68,7 +68,9 @@ describe('autenticación de clientes', () => {
     await waitFor(() => expect(registerClientMock).toHaveBeenCalledWith({
       nombre: 'Ana', apellido: 'López', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', password: 'secreto-seguro',
     }))
-    expect(await screen.findByText('Tu cuenta fue creada. Ya puedes iniciar sesión.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '¡Cuenta creada!' })).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: 'Ir a iniciar sesión' }))
+    expect(screen.getByRole('heading', { name: 'Hola de nuevo.' })).toBeInTheDocument()
     expect(screen.getByLabelText('Correo electrónico')).toHaveValue('ana@example.com')
   })
 
@@ -100,7 +102,7 @@ describe('autenticación de clientes', () => {
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
     await waitFor(() => expect(loginUnifiedMock).toHaveBeenCalledWith('ana@example.com', 'secreto-seguro'))
-    expect(await screen.findByRole('heading', { name: /Hola de nuevo/ })).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument())
     expect(useClientSession.getState().session?.token).toBe('jwt-cliente')
   })
 
@@ -114,7 +116,7 @@ describe('autenticación de clientes', () => {
     await user.type(screen.getByLabelText('Correo electrónico'), 'ana@example.com')
     await user.type(screen.getByLabelText('Contraseña'), 'incorrecta')
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
-    expect(screen.getByRole('button', { name: 'Iniciando sesión...' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Lavando tus datos…' })).toBeDisabled()
 
     rejectLogin(new Error('unauthorized'))
     expect(await screen.findByRole('alert')).toHaveTextContent('El correo o la contraseña son incorrectos.')
@@ -130,7 +132,8 @@ describe('autenticación de clientes', () => {
     await user.click(screen.getByRole('button', { name: 'Enviar enlace' }))
 
     await waitFor(() => expect(requestPasswordResetMock).toHaveBeenCalledWith('ana@example.com'))
-    expect(screen.getByRole('status')).toHaveTextContent('Si el correo existe')
+    expect(await screen.findByRole('status')).toHaveTextContent('Si el correo existe')
+    expect(screen.getByRole('heading', { name: 'Revisa tu correo' })).toBeInTheDocument()
   })
 
   it('valida el token y permite establecer una contraseña nueva', async () => {

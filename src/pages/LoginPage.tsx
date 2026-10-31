@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { LoaderCircle, LogIn } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { adminHandoffURL, authErrorDetails, loginUnified } from '../api/clientAuth'
 import { AuthShell } from '../components/AuthShell'
+import { ArrowRight, AuthField, AuthHeading, AuthNote, Spinner } from '../components/auth/AuthParts'
 import { useClientSession } from '../store/session'
 import { validateLogin } from '../utils/clientAuthValidation'
 
@@ -23,6 +23,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [submitError, setSubmitError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   if (session) return <Navigate to="/inicio" replace />
 
@@ -53,18 +54,16 @@ export function LoginPage() {
   }
 
   return (
-    <AuthShell title="Inicia sesión" description="Consulta tus pedidos y mantente al día con el cuidado de tus prendas.">
-      {state?.registrationCompleted && (
-        <div className="form-message form-message-success" role="status">
-          Tu cuenta fue creada. Ya puedes iniciar sesión.
-        </div>
-      )}
-      {submitError && <div className="form-message form-message-error" role="alert">{submitError}</div>}
-      <form className="auth-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-field">
-          <label htmlFor="login-email">Correo electrónico</label>
-          <input
+    <AuthShell panel="login">
+      <AuthHeading kicker="Portal de clientes" title={<>Hola de{' '}<br />nuevo.</>} lead="Consulta tus pedidos y mantente al día con el cuidado de tus prendas." />
+      {state?.registrationCompleted && <AuthNote tone="ok">Tu cuenta fue creada. Ya puedes iniciar sesión.</AuthNote>}
+      {submitError && <AuthNote tone="err">{submitError}</AuthNote>}
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="sl-fields">
+          <AuthField
             id="login-email"
+            label="Correo electrónico"
+            animationDelay=".34s"
             type="email"
             name="email"
             value={email}
@@ -73,32 +72,33 @@ export function LoginPage() {
             inputMode="email"
             maxLength={150}
             disabled={loading}
-            aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? 'login-email-error' : undefined}
+            error={errors.email}
           />
-          {errors.email && <span id="login-email-error" className="field-error">{errors.email}</span>}
-        </div>
-        <div className="form-field">
-          <label htmlFor="login-password">Contraseña</label>
-          <input
+          <AuthField
             id="login-password"
-            type="password"
+            label="Contraseña"
+            animationDelay=".42s"
+            type={showPassword ? 'text' : 'password'}
             name="password"
             value={password}
             onChange={(event) => { setPassword(event.target.value); setErrors((current) => ({ ...current, password: undefined })) }}
             autoComplete="current-password"
             disabled={loading}
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={errors.password ? 'login-password-error' : undefined}
+            error={errors.password}
+            revealed={showPassword}
+            onToggleReveal={() => setShowPassword((current) => !current)}
           />
-          {errors.password && <span id="login-password-error" className="field-error">{errors.password}</span>}
         </div>
-        <button className="button auth-submit" type="submit" disabled={loading}>
-          {loading ? <><LoaderCircle className="loading-icon" size={18} aria-hidden="true" />Iniciando sesión...</> : <><LogIn size={18} aria-hidden="true" />Iniciar sesión</>}
-        </button>
-        <Link className="forgot-password-link" to="/recuperar-contrasena">Olvidé mi contraseña</Link>
+        <div className="sl-st" style={{ animationDelay: '.5s', display: 'flex', justifyContent: 'flex-end', margin: '10px 0 28px' }}>
+          <Link className="sl-lnk" to="/recuperar-contrasena" style={{ fontSize: 15 }}>Olvidé mi contraseña</Link>
+        </div>
+        <div className="sl-st" style={{ animationDelay: '.58s' }}>
+          <button className="sl-btn" type="submit" disabled={loading}>
+            {loading ? <><Spinner /><span>Lavando tus datos…</span></> : <><span>Iniciar sesión</span><ArrowRight /></>}
+          </button>
+        </div>
       </form>
-      <p className="auth-switch">¿Aún no tienes cuenta? <Link to="/registro">Crear una cuenta</Link></p>
+      <p className="sl-st sl-switch" style={{ animationDelay: '.66s' }}>¿Aún no tienes cuenta? <Link className="sl-lnk" to="/registro">Crear una cuenta</Link></p>
     </AuthShell>
   )
 }
