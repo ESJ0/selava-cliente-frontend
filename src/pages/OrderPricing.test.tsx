@@ -42,25 +42,25 @@ it.each([
   renderDetail()
   const card = (await screen.findByRole('heading', { name: 'Prenda' })).closest('article')!
   expect(within(card).getByText(measureText)).toBeInTheDocument()
-  expect(within(card).getByText(rate)).toBeInTheDocument()
+  expect(within(card).getByText('Precio aplicado').nextElementSibling).toHaveTextContent(rate)
   expect(within(card).getByText(expectedSubtotal)).toBeInTheDocument()
   expect(within(card).queryByText(/999\.00|Q\s*0\.00/)).not.toBeInTheDocument()
-  expect(screen.getByText(/Q\s*199\.99/)).toBeInTheDocument()
+  expect(screen.getAllByText(/Q\s*199\.99/).length).toBeGreaterThan(0)
 })
 
 it('presenta el subtotal recibido sin multiplicar ni sumar los servicios', async () => {
   vi.mocked(getOwnOrderDetail).mockResolvedValue({ ...baseOrder, prendas: [{ id: 1, tipo_prenda_id: 2, cantidad: 0.5, modalidad_cobro_aplicada: 'LIBRA', precio_aplicado: 1.23, subtotal: 42.37, servicios: [] }] })
   renderDetail()
-  await screen.findByText(/Q\s*42\.37/)
+  expect((await screen.findAllByText(/Q\s*42\.37/)).length).toBeGreaterThan(0)
   expect(screen.queryByText(/Q\s*0\.62/)).not.toBeInTheDocument()
-  expect(screen.getByText(/Q\s*199\.99/)).toBeInTheDocument()
+  expect(screen.getAllByText(/Q\s*199\.99/).length).toBeGreaterThan(0)
 })
 
 it.each([undefined, null])('conserva unidades cuando no hay modalidad histórica (%s)', async mode => {
   vi.mocked(getOwnOrderDetail).mockResolvedValue({ ...baseOrder, prendas: [{ id: 1, tipo_prenda_id: 2, tipo_prenda: { id: 2, nombre: 'Histórica', precio: 999, modalidad_cobro: 'LIBRA' }, cantidad: 3, modalidad_cobro_aplicada: mode, precio_aplicado: 25, subtotal: 75, servicios: [] }] })
   renderDetail()
   expect(await screen.findByText('3 unidades')).toBeInTheDocument()
-  expect(screen.getByText(/Q\s*25\.00 por unidad/)).toBeInTheDocument()
+  expect(screen.getByText('Precio aplicado').nextElementSibling).toHaveTextContent(/Q\s*25\.00 por unidad/)
   expect(screen.queryByText(/3 lb|por libra|999\.00/)).not.toBeInTheDocument()
 })
 

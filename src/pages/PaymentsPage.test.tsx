@@ -46,9 +46,9 @@ describe('pagos propios del cliente SEL-106', () => {
 
     renderPayments()
     const cardTitle = await screen.findByRole('heading', { name: 'SLV-0007' })
-    const card = cardTitle.closest('section')!
+    const card = cardTitle.closest('article')!
     expect(within(card).getByText('Transferencia')).toBeInTheDocument()
-    expect(within(card).getByText('Referencia: TRX-25')).toBeInTheDocument()
+    expect(within(card).getByRole('button', { name: 'Copiar referencia TRX-25' })).toHaveTextContent('TRX-25')
     expect(within(card).getByText(/Q\s?100[.,]00/)).toBeInTheDocument()
     expect(within(card).getAllByText(/Q\s?25[.,]00/)).toHaveLength(2)
     expect(within(card).getByText(/Q\s?75[.,]00/)).toBeInTheDocument()
@@ -67,7 +67,8 @@ describe('pagos propios del cliente SEL-106', () => {
     renderPayments()
 
     expect(await screen.findByText('Aún no hay pagos registrados para este pedido.')).toBeInTheDocument()
-    expect(screen.getAllByText(/Q\s?40[.,]00/)).toHaveLength(2)
+    const card = within(screen.getByRole('heading', { name: 'SLV-0008' }).closest('article')!)
+    expect(card.getAllByText(/Q\s?40[.,]00/)).toHaveLength(2)
   })
 
   it('muestra error y permite reintentar', async () => {
@@ -78,5 +79,28 @@ describe('pagos propios del cliente SEL-106', () => {
     await user.click(screen.getByRole('button', { name: 'Intentar de nuevo' }))
     expect(await screen.findByRole('heading', { name: 'Aún no tienes pagos.' })).toBeInTheDocument()
     expect(listMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('separa los pedidos con saldo de los liquidados', async () => {
+    const user = userEvent.setup()
+    listMock.mockResolvedValue({
+      pedidos: [
+        { id: 7, fecha_recibido: '2026-10-15T14:00:00Z', total: 100, estado_actual: { id: 2, nombre: 'En proceso', orden: 2 } },
+        { id: 8, fecha_recibido: '2026-10-16T14:00:00Z', total: 40, estado_actual: { id: 5, nombre: 'Entregado', orden: 5 } },
+      ],
+      total: 2, pagina: 1, limite: 20,
+    })
+    paymentsMock.mockResolvedValue([])
+    balanceMock.mockImplementation(async (id: number) => id === 7
+      ? { pedido_id: 7, total: 100, total_pagado: 25, saldo_pendiente: 75 }
+      : { pedido_id: 8, total: 40, total_pagado: 40, saldo_pendiente: 0 })
+    renderPayments()
+    expect(await screen.findByText('Corresponde a 1 pedido con saldo.')).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /Liquidados/ }))
+    expect(screen.getByRole('heading', { name: 'SLV-0008' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'SLV-0007' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /Con saldo/ }))
+    expect(screen.getByRole('heading', { name: 'SLV-0007' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'SLV-0008' })).not.toBeInTheDocument()
   })
 })
