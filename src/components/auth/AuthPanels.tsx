@@ -10,7 +10,7 @@ export function LoginPanel() {
         <div className="sl-kin"><span>CUIDADO</span><span>LISTO</span><span>CUIDADO</span><span>LISTO</span></div>
       </div>
 
-      <p className="sl-disp sl-st sl-panel-kicker" style={{ position: 'relative', animationDelay: '.6s' }}>Portal de clientes</p>
+      <p className="sl-disp sl-st sl-panel-kicker" style={{ position: 'relative', animationDelay: '.6s' }}>Portal SELAVA</p>
 
       <div className="sl-tilt" style={{ position: 'relative', alignSelf: 'center', width: 330 }}>
         <div style={{ height: 26, borderRadius: 13, background: '#0A2433', boxShadow: '0 10px 30px -8px rgba(10,36,51,.6)' }} />

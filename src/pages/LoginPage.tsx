@@ -55,7 +55,7 @@ export function LoginPage() {
 
   return (
     <AuthShell panel="login">
-      <AuthHeading kicker="Portal de clientes" title={<>Hola de{' '}<br />nuevo.</>} lead="Consulta tus pedidos y mantente al día con el cuidado de tus prendas." />
+      <AuthHeading kicker="Portal SELAVA" title={<>Hola de{' '}<br />nuevo.</>} lead="Consulta tus pedidos y mantente al día con el cuidado de tus prendas." />
       {state?.registrationCompleted && <AuthNote tone="ok">Tu cuenta fue creada. Ya puedes iniciar sesión.</AuthNote>}
       {submitError && <AuthNote tone="err">{submitError}</AuthNote>}
       <form onSubmit={handleSubmit} noValidate>
