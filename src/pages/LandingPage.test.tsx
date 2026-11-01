@@ -3,11 +3,15 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getPublicGarmentTypes } from '../api/publicGarmentTypes'
+import { getPublicPromotions, type PublicPromotion } from '../api/publicPromotions'
 import { AppRoutes } from '../routes/AppRoutes'
 import { useClientSession } from '../store/session'
 
 vi.mock('../api/publicGarmentTypes', () => ({ getPublicGarmentTypes: vi.fn() }))
+vi.mock('../api/publicPromotions', () => ({ getPublicPromotions: vi.fn() }))
 const getPublicGarmentTypesMock = vi.mocked(getPublicGarmentTypes)
+const getPublicPromotionsMock = vi.mocked(getPublicPromotions)
+const promo = (id: number, extra: Partial<PublicPromotion> = {}): PublicPromotion => ({ id, nombre: `Promo ${id}`, descripcion: '', tipo_prenda_id: 5, tipo_prenda_nombre: 'Alfombra', modalidad_cobro: 'METRO', medida_requerida: 2, precio_promocional: 60, fecha_inicio: '2020-01-01T00:00:00Z', fecha_fin: '2099-12-31T23:00:00Z', ...extra })
 
 function renderSite(path = '/') {
   return render(<MemoryRouter initialEntries={[path]}><AppRoutes /></MemoryRouter>)
@@ -15,6 +19,8 @@ function renderSite(path = '/') {
 
 beforeEach(() => {
   getPublicGarmentTypesMock.mockReset()
+  getPublicPromotionsMock.mockReset()
+  getPublicPromotionsMock.mockResolvedValue([])
   useClientSession.getState().clearSession()
   sessionStorage.clear()
 })
@@ -38,12 +44,18 @@ describe('sitio público', () => {
     expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/login')
     expect(screen.getByRole('heading', { name: 'Precios por tipo de prenda' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Una lavandería pensada para cuidar cada detalle.' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Contacto y ubicación' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Pasa a vernos o escríbenos.' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Abrimos el 14 de febrero' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '2474-0193' })).toHaveAttribute('href', 'tel:24740193')
-    expect(screen.getByText('Lunes a viernes').parentElement).toHaveTextContent('09:00 – 20:00')
-    expect(screen.getByText(/Centro Comercial Centro San Juan/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Cómo llegar' })).toHaveAttribute('href', expect.stringContaining('google.com/maps'))
+    expect(screen.getByRole('link', { name: 'Llamar al 2474-0193' })).toHaveAttribute('href', 'tel:+50224740193')
+    expect(screen.getByText('Lunes').parentElement).toHaveTextContent('09:00 – 20:00')
+    expect(screen.getByText('Domingo', { exact: false }).closest('li')).toHaveTextContent('10:00 – 18:00')
+    expect(screen.getAllByText(/Centro Comercial Centro San Juan/)[0]).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Cómo llegar/ })).toHaveAttribute('href', expect.stringContaining('google.com/maps/dir'))
+    expect(screen.getByRole('link', { name: 'Facebook' })).toHaveAttribute('href', 'https://www.facebook.com/share/1HSYqFmjnD/')
+    expect(screen.getByRole('link', { name: 'Instagram' })).toHaveAttribute('href', 'https://www.instagram.com/selava_lavanderia?exln=NDl6cnFtYzg3eDRl')
+    expect(screen.getByRole('link', { name: 'Escribir por WhatsApp al 3817-4898' }).getAttribute('href')).toMatch(/^https:\/\/wa\.me\/50238174898\?text=Hola%20SELAVA/)
+    expect(screen.queryByRole('region', { name: 'Paga menos por lavar más.' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Promociones' })).not.toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'El catálogo se está actualizando' })).toBeInTheDocument()
     expect(document.title).toBe('Inicio | SeLava')
     await user.click(screen.getByRole('link', { name: 'Iniciar sesión' }))
@@ -97,5 +109,33 @@ describe('sitio público', () => {
     expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument()
     expect(screen.getByLabelText('Contraseña')).toBeInTheDocument()
     expect(document.title).toBe('Iniciar sesión | SeLava')
+  })
+
+  it('muestra las promociones vigentes del backend, las más nuevas primero', async () => {
+    getPublicGarmentTypesMock.mockResolvedValue([{ id: 5, nombre: 'Alfombra', descripcion: null, precio: 40, modalidad_cobro: 'METRO' }])
+    getPublicPromotionsMock.mockResolvedValue([promo(3), promo(7, { tipo_prenda_id: 4, tipo_prenda_nombre: 'Canasta', modalidad_cobro: 'LIBRA', medida_requerida: 5, precio_promocional: 50 })])
+    renderSite()
+    const section = await screen.findByRole('region', { name: 'Paga menos por lavar más.' })
+    const coupons = within(section).getAllByRole('article')
+    expect(coupons.map((coupon) => coupon.getAttribute('aria-label'))).toEqual(['Promo 7', 'Promo 3'])
+    expect(within(coupons[1]).getByText('−25%')).toBeInTheDocument()
+    expect(coupons[1]).toHaveTextContent('Normalmente pagarías Q80. Te ahorras Q20 en cada paquete de 2 m.')
+    expect(within(coupons[1]).getByText('Q40')).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: 'Promociones' })[0]).toHaveAttribute('href', '#promociones')
+    expect(screen.getByText('04 — Estamos para ayudarte')).toBeInTheDocument()
+  })
+
+  it('oculta una promoción cuando el backend deja de devolverla', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      getPublicGarmentTypesMock.mockResolvedValue([])
+      getPublicPromotionsMock.mockResolvedValueOnce([promo(3)]).mockResolvedValue([])
+      renderSite()
+      expect(await screen.findByRole('region', { name: 'Paga menos por lavar más.' })).toBeInTheDocument()
+      await vi.advanceTimersByTimeAsync(61_000)
+      await waitFor(() => expect(screen.queryByRole('region', { name: 'Paga menos por lavar más.' })).not.toBeInTheDocument())
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
