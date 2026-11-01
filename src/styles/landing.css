@@ -199,3 +199,5 @@
 @media (prefers-reduced-motion: reduce) {
   .sl-landing *, .sl-landing *::before, .sl-landing *::after { animation: none !important; transition: none !important; }
 }
+.sl-brand-logo { display: block; width: auto; height: 72px; object-fit: contain; transition: transform .4s cubic-bezier(.2,1.4,.4,1); }
+.sl-brand:hover .sl-brand-logo, .cp-brand:hover .sl-brand-logo { transform: rotate(-3deg) scale(1.04); }

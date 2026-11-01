@@ -1,8 +1,4 @@
+/** Logotipo oficial de SELAVA (Lavandería y Dry Clean). */
 export function BrandMark() {
-  return (
-    <>
-      <span className="sl-brand-mark" aria-hidden="true" />
-      <span className="sl-disp sl-brand-name">Se<span>Lava</span></span>
-    </>
-  )
+  return <img className="sl-brand-logo" src="/selava-logo.png" alt="" width={480} height={368} decoding="async" />
 }
