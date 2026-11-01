@@ -54,7 +54,7 @@ export const publicSiteContent: PublicSiteContent = {
     ],
   },
   contact: {
-    phone: '2474-0193',
+    phone: '3817-4898',
     whatsapp: '3817-4898',
     whatsappMessage: 'Hola SELAVA, quisiera información sobre sus servicios de lavandería.',
     week: [

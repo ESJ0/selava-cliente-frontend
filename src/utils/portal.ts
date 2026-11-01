@@ -6,8 +6,8 @@ const weekday = new Intl.DateTimeFormat('es-GT', { weekday: 'long' })
 const dayMonth = new Intl.DateTimeFormat('es-GT', { day: 'numeric', month: 'long' })
 const dateTime = new Intl.DateTimeFormat('es-GT', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
 
-export const SELAVA_PHONE = '2474-0193'
-export const SELAVA_PHONE_HREF = 'tel:24740193'
+export const SELAVA_PHONE = '3817-4898'
+export const SELAVA_PHONE_HREF = 'tel:+50238174898'
 
 /** Importe con el formato del diseño: "Q 1,234.50". */
 export function money(value: number): string {
