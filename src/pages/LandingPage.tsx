@@ -1,16 +1,13 @@
-import { Fragment, type ReactNode } from 'react'
+import { Fragment } from 'react'
 import { PublicHeader } from '../components/PublicHeader'
 import { PublicGarmentPricesSection } from '../components/PublicGarmentPricesSection'
-import { publicSiteContent } from '../content/publicSite'
+import { PublicContactSection } from '../components/PublicContactSection'
+import { PublicPromotionsSection } from '../components/PublicPromotionsSection'
+import { phoneHref as toPhoneHref, publicSiteContent } from '../content/publicSite'
+import { useNow } from '../hooks/useNow'
+import { usePublicPromotions } from '../hooks/usePublicPromotions'
 
 const shirt = 'M20 2 L4 12 L10 24 L16 20 L16 54 L48 54 L48 20 L54 24 L60 12 L44 2 C40 8 24 8 20 2 Z'
-
-const socialIcons: Record<string, ReactNode> = {
-  Facebook: <path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V10H6.5v3.5H9V21h3.5v-7.5H15l.5-3.5h-3V7a1 1 0 0 1 1-1H15z" />,
-  Instagram: <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" /></>,
-  TikTok: <><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5" /><path d="M14 3c.5 2.8 2.4 4.6 5 5" /></>,
-  WhatsApp: <><path d="M4 20l1.3-4A8 8 0 1 1 8 18.8z" /><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.4-1.6-1-2-2l1-1-1-2z" /></>,
-}
 
 function Drum() {
   return (
@@ -44,25 +41,13 @@ function Drum() {
   )
 }
 
-function CityMap() {
-  return (
-    <svg viewBox="0 0 600 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <g stroke="#1E4A61" strokeWidth="10" fill="none" strokeLinecap="round">
-        <path d="M-20 420 L620 80" /><path d="M80 -20 L260 600" /><path d="M360 -20 L520 600" />
-      </g>
-      <g stroke="#1A3F53" strokeWidth="4" fill="none">
-        <path d="M-20 120 L620 260" /><path d="M-20 200 L620 340" /><path d="M-20 300 L620 440" /><path d="M-20 380 L620 520" />
-        <path d="M180 -20 L340 600" /><path d="M440 -20 L600 600" />
-      </g>
-      <rect x="90" y="360" width="120" height="90" rx="10" fill="#1C5A52" />
-      <rect x="420" y="120" width="80" height="60" rx="10" fill="#1C5A52" />
-    </svg>
-  )
-}
-
 export function LandingPage() {
   const { about, contact, ribbon } = publicSiteContent
-  const phoneHref = `tel:${contact.phone.replace(/\D/g, '')}`
+  const phoneHref = toPhoneHref(contact.phone)
+  const now = useNow()
+  const { promotions, types } = usePublicPromotions()
+  const hasPromos = promotions.length > 0
+  const n = (index: number) => String(index).padStart(2, '0')
   const ribbonGroup = (hidden: boolean) => (
     <span className="sl-ribbon-group" aria-hidden={hidden || undefined}>
       {ribbon.map((item) => <Fragment key={item}>{item} <i>✦</i></Fragment>)}
@@ -72,7 +57,7 @@ export function LandingPage() {
   return (
     <div className="sl-landing">
       <a className="skip-link" href="#contenido-publico">Saltar al contenido</a>
-      <PublicHeader />
+      <PublicHeader showPromotions={hasPromos} />
       <main id="contenido-publico">
         <section id="inicio" className="sl-wrap sl-hero-section" aria-labelledby="landing-title">
           <div className="sl-hero">
@@ -101,10 +86,12 @@ export function LandingPage() {
 
         <PublicGarmentPricesSection />
 
+        <PublicPromotionsSection promotions={promotions} types={types} number={n(2)} now={now} />
+
         <section id="nosotros" className="sl-about-section" aria-labelledby="about-title">
           <div className="sl-wrap sl-about">
             <div className="sl-rv">
-              <p className="sl-eyebrow">02 — Sobre nosotros</p>
+              <p className="sl-eyebrow">{n(hasPromos ? 3 : 2)} — Sobre nosotros</p>
               <h2 id="about-title" className="sl-disp">{about.title} <span>{about.highlight}</span></h2>
               <p className="sl-about-lead">{about.description}</p>
             </div>
@@ -122,54 +109,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="contacto" className="sl-contact-section" aria-labelledby="contact-title">
-          <div className="sl-wrap sl-contact-inner">
-            <p className="sl-rv sl-eyebrow">03 — Estamos para ayudarte</p>
-            <h2 id="contact-title" className="sl-disp sl-rv sl-h2">Contacto y ubicación</h2>
-            <div className="sl-contact">
-              <div className="sl-rv sl-contact-info">
-                <div>
-                  <p className="sl-contact-label">Teléfono</p>
-                  <a className="sl-disp sl-phone" href={phoneHref}>{contact.phone}</a>
-                </div>
-                <div>
-                  <p className="sl-contact-label" style={{ marginBottom: 14 }}>Horario</p>
-                  <div className="sl-hours">
-                    {contact.schedule.map(({ days, hours }) => <div key={days}><span>{days}</span><strong>{hours}</strong></div>)}
-                  </div>
-                </div>
-                <div>
-                  <p className="sl-contact-label">Dirección</p>
-                  <p className="sl-address">{contact.addressLines.map((line, index) => <Fragment key={line}>{index > 0 && <br />}{line}{index < contact.addressLines.length - 1 && ' '}</Fragment>)}</p>
-                </div>
-                <div>
-                  <p className="sl-contact-label" style={{ marginBottom: 16 }}>Síguenos</p>
-                  <div className="sl-socials">
-                    {contact.socials.map(({ label, href }) => (
-                      <a key={label} className="sl-soc" href={href} aria-label={label}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{socialIcons[label]}</svg>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="sl-rv sl-map">
-                <CityMap />
-                <div className="sl-map-pin" aria-hidden="true"><span className="sl-pin" /><span /></div>
-                <div className="sl-map-card">
-                  <div>
-                    <p className="sl-disp">{contact.place}</p>
-                    <p>{contact.placeDetail}</p>
-                  </div>
-                  <a className="sl-cta" href={contact.mapUrl} target="_blank" rel="noreferrer">Cómo llegar
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9" /></svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <PublicContactSection number={n(hasPromos ? 4 : 3)} now={now} />
       </main>
 
       <footer className="sl-footer">
@@ -179,6 +119,7 @@ export function LandingPage() {
             <span>Tu ropa en buenas manos.</span>
             <nav aria-label="Navegación secundaria">
               <a href="#precios">Precios</a>
+              {hasPromos && <a href="#promociones">Promociones</a>}
               <a href="#nosotros">Nosotros</a>
               <a href="#contacto">Contacto</a>
             </nav>

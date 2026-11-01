@@ -13,12 +13,15 @@ interface PublicSiteContent {
   about: { title: string; highlight: string; description: string; milestones: Milestone[] }
   contact: {
     phone: string
+    whatsapp: string
+    whatsappMessage: string
+    week: { day: string; open: number; close: number }[]
     schedule: { days: string; hours: string }[]
     addressLines: string[]
     place: string
     placeDetail: string
-    mapUrl: string
-    socials: { label: string; href: string }[]
+    mapQuery: string
+    socials: { label: 'Facebook' | 'Instagram' | 'WhatsApp'; href: string }[]
   }
 }
 
@@ -52,19 +55,37 @@ export const publicSiteContent: PublicSiteContent = {
   },
   contact: {
     phone: '2474-0193',
+    whatsapp: '3817-4898',
+    whatsappMessage: 'Hola SELAVA, quisiera información sobre sus servicios de lavandería.',
+    week: [
+      { day: 'Lunes', open: 9, close: 20 },
+      { day: 'Martes', open: 9, close: 20 },
+      { day: 'Miércoles', open: 9, close: 20 },
+      { day: 'Jueves', open: 9, close: 20 },
+      { day: 'Viernes', open: 9, close: 20 },
+      { day: 'Sábado', open: 10, close: 18 },
+      { day: 'Domingo', open: 10, close: 18 },
+    ],
     schedule: [
       { days: 'Lunes a viernes', hours: '09:00 – 20:00' },
       { days: 'Sábados y domingos', hours: '10:00 – 18:00' },
     ],
     addressLines: ['23 avenida 21-54, zona 7, Kaminal Juyú 2.', 'Centro Comercial Centro San Juan, local S1-102.'],
-    place: 'Centro San Juan',
-    placeDetail: 'Local S1-102 · Zona 7',
-    mapUrl: 'https://www.google.com/maps/search/?api=1&query=Centro+Comercial+Centro+San+Juan+zona+7+Guatemala',
+    place: 'Centro Comercial Centro San Juan',
+    placeDetail: 'Local S1-102',
+    mapQuery: 'Centro Comercial Centro San Juan, 23 avenida 21-54, zona 7, Ciudad de Guatemala',
     socials: [
-      { label: 'Facebook', href: '#facebook' },
-      { label: 'Instagram', href: '#instagram' },
-      { label: 'TikTok', href: '#tiktok' },
-      { label: 'WhatsApp', href: '#whatsapp' },
+      { label: 'Facebook', href: 'https://www.facebook.com/share/1HSYqFmjnD/' },
+      { label: 'Instagram', href: 'https://www.instagram.com/selava_lavanderia?exln=NDl6cnFtYzg3eDRl' },
     ],
   },
 }
+
+const digits = (value: string) => value.replace(/\D/g, '')
+/** Enlace para marcar directamente desde el teléfono (código de país de Guatemala). */
+export const phoneHref = (phone: string) => `tel:+502${digits(phone)}`
+/** Abre el chat de WhatsApp con un mensaje listo para enviar. */
+export const whatsappHref = (phone: string, message: string) => `https://wa.me/502${digits(phone)}?text=${encodeURIComponent(message)}`
+export const mapsDirectionsHref = (query: string) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`
+export const wazeHref = (query: string) => `https://waze.com/ul?q=${encodeURIComponent(query)}&navigate=yes`
+export const mapsEmbedSrc = (query: string) => `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=17&output=embed`
