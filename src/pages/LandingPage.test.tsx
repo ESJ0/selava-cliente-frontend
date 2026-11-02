@@ -58,11 +58,11 @@ describe('sitio público', () => {
     expect(screen.queryByRole('region', { name: 'Paga menos por lavar más.' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Promociones' })).not.toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'El catálogo se está actualizando' })).toBeInTheDocument()
-    expect(document.title).toBe('Inicio | SeLava')
+    expect(document.title).toBe('Inicio | SELAVA')
     await user.click(screen.getByRole('link', { name: 'Iniciar sesión' }))
     expect(screen.getByRole('heading', { name: 'Hola de nuevo.' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Crear una cuenta' })).toHaveAttribute('href', '/registro')
-    expect(document.title).toBe('Iniciar sesión | SeLava')
+    expect(document.title).toBe('Iniciar sesión | SELAVA')
   })
 
   it('presenta precios por prenda sin tarifas propias de servicios', async () => {
@@ -109,7 +109,7 @@ describe('sitio público', () => {
     expect(screen.getByRole('heading', { name: 'Hola de nuevo.' })).toBeInTheDocument()
     expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument()
     expect(screen.getByLabelText('Contraseña')).toBeInTheDocument()
-    expect(document.title).toBe('Iniciar sesión | SeLava')
+    expect(document.title).toBe('Iniciar sesión | SELAVA')
   })
 
   it('muestra las promociones vigentes del backend, las más nuevas primero', async () => {

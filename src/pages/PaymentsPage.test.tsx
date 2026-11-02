@@ -33,7 +33,7 @@ describe('pagos propios del cliente SEL-106', () => {
     renderPayments()
     expect(screen.getByRole('status')).toHaveTextContent('Cargando pagos')
     expect(await screen.findByRole('heading', { name: 'Aún no tienes pagos.' })).toBeInTheDocument()
-    expect(document.title).toBe('Mis pagos | SeLava')
+    expect(document.title).toBe('Mis pagos | SELAVA')
   })
 
   it('presenta historial, metodo y saldo por pedido', async () => {
