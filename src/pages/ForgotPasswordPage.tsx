@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { authErrorDetails, requestPasswordReset } from '../api/clientAuth'
 import { AuthShell } from '../components/AuthShell'
 import { AuthField, AuthHeading, AuthNote, CheckIcon, MailIcon, Spinner } from '../components/auth/AuthParts'
 
 export function ForgotPasswordPage() {
+  const [params] = useSearchParams()
+  const token = params.get('token')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -17,6 +19,9 @@ export function ForgotPasswordPage() {
     catch (cause) { setError(authErrorDetails(cause, 'No pudimos procesar la solicitud. Inténtalo nuevamente.').message) }
     finally { setLoading(false) }
   }
+
+  // Si el enlace del correo llega a esta ruta (PASSWORD_RESET_URL mal configurado), se envía a la página correcta.
+  if (token) return <Navigate to={`/restablecer-contrasena?token=${encodeURIComponent(token)}`} replace />
 
   if (message) {
     return <AuthShell panel="recovery">
