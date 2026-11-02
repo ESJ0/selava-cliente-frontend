@@ -72,7 +72,7 @@ describe('Home SEL-94', () => {
     renderPortal('/inicio')
     expect(screen.getByRole('heading', { name: /Hola, Ana/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page')
-    expect(document.title).toBe('Portal de clientes | SeLava')
+    expect(document.title).toBe('Mi portal | SELAVA')
   })
 
   it('presenta saludo, avatar y CTA personal para la sesión real', () => {
@@ -147,7 +147,7 @@ describe('Home SEL-94', () => {
     expect(link).toHaveFocus()
     await user.keyboard('{Enter}')
     expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument()
-    expect(document.title).toBe(`${title} | SeLava`)
+    expect(document.title).toBe(`${title} | SELAVA`)
     expect(link).toHaveAttribute('aria-current', 'page')
   })
 })

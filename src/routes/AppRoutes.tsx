@@ -21,7 +21,7 @@ const upcoming = [
 
 const standaloneTitles: Record<string, string> = {
   '/': 'Inicio',
-  '/inicio': 'Portal de clientes',
+  '/inicio': 'Mi portal',
   '/login': 'Iniciar sesión',
   '/recuperar-contrasena': 'Recuperar contraseña',
   '/restablecer-contrasena': 'Nueva contraseña',
@@ -38,7 +38,7 @@ export function AppRoutes() {
       : pathname === '/mis-pedidos'
         ? 'Mis pedidos'
         : upcoming.find((page) => page.path === pathname)?.title ?? standaloneTitles[pathname] ?? 'Página no encontrada'
-    document.title = `${title} | SeLava`
+    document.title = `${title} | SELAVA`
   }, [pathname])
   return (
     <Routes>
