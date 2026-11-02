@@ -6,6 +6,7 @@ import {
 } from '../api/profile'
 import { PageHeading, PortalError, PortalLoading, delay } from '../components/portal/PortalBits'
 import { CameraIcon, CheckIcon, EyeIcon, EyeOffIcon, LockIcon, SaveIcon, SpinnerIcon, UploadIcon, UserIcon } from '../components/portal/icons'
+import { useProfilePhoto } from '../store/profilePhoto'
 import { useClientSession } from '../store/session'
 import type { ClientProfileUpdate } from '../types/profile'
 import { initialsOf } from '../utils/portal'
@@ -37,6 +38,9 @@ const fields: { key: keyof ClientProfileUpdate; label: string; type?: string; au
 ]
 
 export function ProfilePage() {
+  const customerId = useClientSession((state) => state.session?.customer.id)
+  // Mantiene sincronizada la foto del encabezado con la del perfil.
+  const refreshHeaderPhoto = () => { if (customerId) void useProfilePhoto.getState().load(customerId, true) }
   const [saved, setSaved] = useState(emptyProfile)
   const [profile, setProfile] = useState(emptyProfile)
   const [hasPhoto, setHasPhoto] = useState(false)
@@ -136,14 +140,14 @@ export function ProfilePage() {
       setPhotoError('Selecciona una imagen JPEG, PNG o WebP de hasta 2 MB.'); input.value = ''; return
     }
     setPhotoBusy(true)
-    try { await uploadClientProfilePhoto(file); flash('Tu foto de perfil fue actualizada.'); setReloadKey((key) => key + 1) }
+    try { await uploadClientProfilePhoto(file); flash('Tu foto de perfil fue actualizada.'); setReloadKey((key) => key + 1); refreshHeaderPhoto() }
     catch (cause) { setPhotoError(apiError(cause, 'No pudimos actualizar tu foto.')) }
     finally { setPhotoBusy(false); input.value = '' }
   }
 
   async function removePhoto() {
     setPhotoBusy(true); setPhotoError('')
-    try { await deleteClientProfilePhoto(); setHasPhoto(false); setPhotoUrl(''); flash('Tu foto de perfil fue eliminada.') }
+    try { await deleteClientProfilePhoto(); setHasPhoto(false); setPhotoUrl(''); flash('Tu foto de perfil fue eliminada.'); refreshHeaderPhoto() }
     catch (cause) { setPhotoError(apiError(cause, 'No pudimos eliminar tu foto.')) }
     finally { setPhotoBusy(false) }
   }

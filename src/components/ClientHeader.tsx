@@ -1,10 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { getClientProfile } from '../api/profile'
+import { useProfilePhoto } from '../store/profilePhoto'
 import { useClientSession } from '../store/session'
 import { initialsOf } from '../utils/portal'
 import { BrandMark } from './BrandMark'
 import { NotificationCenter } from './NotificationCenter'
+import { SessionScreen } from './SessionScreen'
 import { BagIcon, CardIcon, HomeIcon, LogoutIcon, UserIcon } from './portal/icons'
 
 const navigation = [
@@ -19,6 +21,20 @@ export function ClientHeader() {
   const setSession = useClientSession((state) => state.setSession)
   const clearSession = useClientSession((state) => state.clearSession)
   const navigate = useNavigate()
+  const photoUrl = useProfilePhoto((state) => state.url)
+  const loadPhoto = useProfilePhoto((state) => state.load)
+  const clearPhoto = useProfilePhoto((state) => state.clear)
+  const [leaving, setLeaving] = useState(false)
+  const customerId = session?.customer.id
+
+  useEffect(() => { if (customerId) void loadPhoto(customerId) }, [customerId, loadPhoto])
+
+  // Muestra la despedida con el logo y después cierra la sesión.
+  useEffect(() => {
+    if (!leaving) return
+    const timer = window.setTimeout(() => { clearPhoto(); clearSession(); navigate('/login') }, import.meta.env.MODE === 'test' ? 0 : 1100)
+    return () => window.clearTimeout(timer)
+  }, [leaving, clearPhoto, clearSession, navigate])
   const fullName = [session?.customer.nombre, session?.customer.apellido].filter(Boolean).join(' ')
   const initials = fullName ? initialsOf(fullName) : session?.customer.email?.charAt(0).toUpperCase() ?? 'C'
   const missingName = Boolean(session && !session.customer.nombre)
@@ -51,13 +67,14 @@ export function ClientHeader() {
         {session && (
           <div className="cp-session">
             <NotificationCenter />
-            <Link to="/mi-perfil" className="cp-avatar" aria-label={`Perfil de ${fullName || 'cliente'}`}>{initials}</Link>
-            <button className="cp-ib" type="button" aria-label="Cerrar sesión" onClick={() => { clearSession(); navigate('/login') }}>
+            <Link to="/mi-perfil" className={`cp-avatar${photoUrl ? ' has-photo' : ''}`} aria-label={`Perfil de ${fullName || 'cliente'}`}>{photoUrl ? <img src={photoUrl} alt="" /> : initials}</Link>
+            <button className="cp-ib" type="button" aria-label="Cerrar sesión" onClick={() => setLeaving(true)}>
               <LogoutIcon size={20} />
             </button>
           </div>
         )}
       </div>
+      {leaving && <SessionScreen tone="out" title="Cerrando sesión" text="Guardando todo en orden… ¡hasta pronto!" />}
     </header>
   )
 }

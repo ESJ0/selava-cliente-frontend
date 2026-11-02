@@ -1,9 +1,10 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getOwnOrders } from '../api/orders'
 import { AppRoutes } from '../routes/AppRoutes'
+import { useProfilePhoto } from '../store/profilePhoto'
 import { useClientSession } from '../store/session'
 
 vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn(), getOwnOrderDetail: vi.fn().mockRejectedValue(new Error('sin detalle')) }))
@@ -102,9 +103,23 @@ describe('Home SEL-94', () => {
     useClientSession.getState().setSession(testSession)
     renderPortal()
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    expect(await screen.findByRole('heading', { name: 'Hola de nuevo.' })).toBeInTheDocument()
     expect(useClientSession.getState().session).toBeNull()
-    expect(screen.getByRole('heading', { name: 'Hola de nuevo.' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument()
+  })
+
+  it('muestra la foto de perfil del cliente en el encabezado', async () => {
+    const profileApi = await import('../api/profile')
+    vi.mocked(profileApi.getClientProfile).mockResolvedValueOnce({ id: 7, nombre: 'Ana', apellido: 'Pérez', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', activo: true, tiene_foto_perfil: true } as never)
+    vi.mocked(profileApi.getClientProfilePhoto).mockResolvedValueOnce(new Blob(['x'], { type: 'image/png' }))
+    URL.createObjectURL = vi.fn(() => 'blob:foto-ana')
+    URL.revokeObjectURL = vi.fn()
+    useProfilePhoto.getState().clear()
+    useClientSession.getState().setSession(testSession)
+    renderPortal()
+    const avatar = screen.getByRole('link', { name: /Perfil de/ })
+    await waitFor(() => expect(avatar.querySelector('img')).toHaveAttribute('src', 'blob:foto-ana'))
+    useProfilePhoto.getState().clear()
   })
 
   it('permite acceder por teclado al enlace de salto y a Inicio', async () => {
