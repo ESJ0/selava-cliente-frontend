@@ -1,18 +1,36 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getOwnOrderDetail, getOwnOrderHistory, getOwnOrders } from '../api/orders'
+import { getOwnGarmentTypes, getOwnOrderDetail, getOwnOrderHistory, getOwnOrders } from '../api/orders'
 import { getOwnOrderBalance, getOwnOrderPayments } from '../api/payments'
 import { AppRoutes } from '../routes/AppRoutes'
 import { useClientSession } from '../store/session'
+import type { OwnOrderSummary, OwnOrdersParams, OwnOrdersResponse } from '../types/order'
+import { paymentSituation } from '../utils/portal'
 
-vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn(), getOwnOrderDetail: vi.fn(), getOwnOrderHistory: vi.fn() }))
+vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn(), getOwnOrderDetail: vi.fn(), getOwnOrderHistory: vi.fn(), getOwnGarmentTypes: vi.fn() }))
 vi.mock('../api/payments', () => ({ getOwnOrderPayments: vi.fn(), getOwnOrderBalance: vi.fn() }))
 
 const listMock = vi.mocked(getOwnOrders)
 const paymentsMock = vi.mocked(getOwnOrderPayments)
-const balanceMock = vi.mocked(getOwnOrderBalance)
+
+const status = (nombre: string, terminal = false, cancel = false) => ({ id: nombre.length, nombre, orden: 1, es_terminal: terminal, es_cancelacion: cancel })
+const order = (id: number, total: number, paid: number, inProcess: boolean, extra: Partial<OwnOrderSummary> = {}): OwnOrderSummary => ({
+  id, total, total_pagado: paid, saldo_pendiente: Math.max(0, total - paid), en_proceso: inProcess, cancelado: false,
+  fecha_recibido: `2026-10-${String(id).padStart(2, '0')}T14:00:00Z`, tipos_prenda: ['Camisa'],
+  estado_actual: inProcess ? status('En proceso') : status('Finalizado', true), ...extra,
+})
+const activeDue = order(7, 100, 25, true)
+const activePaid = order(8, 40, 40, true)
+const finishedDue = order(5, 80, 30, false)
+const finishedPaid = order(3, 60, 60, false)
+const resumen = { activos: 2, historial: 2, pedidos_con_saldo: 2, saldo_pendiente: 125, total_pagado: 155, total_facturado: 280 }
+const page = (pedidos: OwnOrderSummary[], total = pedidos.length): OwnOrdersResponse => ({ pedidos, total, pagina: 1, limite: 8, resumen })
+
+function serve(handler: (params: OwnOrdersParams) => OwnOrdersResponse) {
+  listMock.mockImplementation(async (params = {}) => handler(params))
+}
 
 function renderPayments() {
   useClientSession.getState().setSession({ customer: { id: 42, nombre: 'Ana', apellido: 'López' }, token: 'jwt' })
@@ -21,86 +39,123 @@ function renderPayments() {
 
 beforeEach(() => {
   listMock.mockReset()
-  paymentsMock.mockReset()
-  balanceMock.mockReset()
+  paymentsMock.mockReset().mockResolvedValue([])
+  vi.mocked(getOwnOrderBalance).mockReset()
   vi.mocked(getOwnOrderDetail).mockReset()
   vi.mocked(getOwnOrderHistory).mockReset()
+  vi.mocked(getOwnGarmentTypes).mockReset().mockResolvedValue([{ id: 1, nombre: 'Camisa' }, { id: 2, nombre: 'Vestido' }])
 })
 
-describe('pagos propios del cliente SEL-106', () => {
-  it('muestra carga y luego el estado vacio', async () => {
-    listMock.mockResolvedValue({ pedidos: [], total: 0, pagina: 1, limite: 20 })
+describe('clasificación de pagos', () => {
+  it.each([
+    [activeDue, 'activo-saldo'],
+    [activePaid, 'activo-pagado'],
+    [finishedDue, 'finalizado-saldo'],
+    [finishedPaid, 'finalizado-pagado'],
+    [order(9, 30, 0, false, { cancelado: true, estado_actual: status('Cancelado', true, true) }), 'cancelado'],
+  ])('clasifica el pedido %#', (item, expected) => {
+    expect(paymentSituation(item)).toBe(expected)
+  })
+})
+
+describe('Mis pagos: pendientes e historial', () => {
+  it('muestra carga y luego el estado vacío', async () => {
+    serve(() => ({ pedidos: [], total: 0, pagina: 1, limite: 100, resumen: { ...resumen, activos: 0, historial: 0, pedidos_con_saldo: 0, saldo_pendiente: 0, total_pagado: 0, total_facturado: 0 } }))
     renderPayments()
-    expect(screen.getByRole('status')).toHaveTextContent('Cargando pagos')
+    expect(screen.getAllByRole('status')[0]).toHaveTextContent('Cargando pagos')
     expect(await screen.findByRole('heading', { name: 'Aún no tienes pagos.' })).toBeInTheDocument()
     expect(document.title).toBe('Mis pagos | SELAVA')
   })
 
-  it('presenta historial, metodo y saldo por pedido', async () => {
-    listMock.mockResolvedValue({
-      pedidos: [{ id: 7, fecha_recibido: '2026-10-15T14:00:00Z', total: 100, estado_actual: { id: 2, nombre: 'En proceso', orden: 2 } }],
-      total: 1, pagina: 1, limite: 20,
-    })
-    paymentsMock.mockResolvedValue([{ id: 1, pedido_id: 7, monto: 25, referencia: 'TRX-25', fecha_pago: '2026-10-19T14:00:00Z', metodo_pago: { id: 2, nombre: 'Transferencia' } }])
-    balanceMock.mockResolvedValue({ pedido_id: 7, total: 100, total_pagado: 25, saldo_pendiente: 75 })
-
+  it('prioriza los pendientes activos y mueve los pagados al historial', async () => {
+    serve((params) => params.saldo === 'pendiente' ? page([activeDue, finishedDue]) : page([activePaid, finishedPaid]))
     renderPayments()
-    const cardTitle = await screen.findByRole('heading', { name: 'SLV-0007' })
-    const card = cardTitle.closest('article')!
-    expect(within(card).getByText('Transferencia')).toBeInTheDocument()
-    expect(within(card).getByRole('button', { name: 'Copiar referencia TRX-25' })).toHaveTextContent('TRX-25')
-    expect(within(card).getByText(/Q\s?100[.,]00/)).toBeInTheDocument()
-    expect(within(card).getAllByText(/Q\s?25[.,]00/)).toHaveLength(2)
-    expect(within(card).getByText(/Q\s?75[.,]00/)).toBeInTheDocument()
-    expect(within(card).getByRole('link', { name: 'Ver detalle de SLV-0007' })).toHaveAttribute('href', '/mis-pedidos/7')
-    expect(paymentsMock).toHaveBeenCalledWith(7, expect.any(AbortSignal))
-    expect(balanceMock).toHaveBeenCalledWith(7, expect.any(AbortSignal))
+    const pending = within(await screen.findByRole('region', { name: /Pagos pendientes/ }))
+    const pendingCodes = (await pending.findAllByRole('heading', { name: /SLV-/ })).map((heading) => heading.textContent)
+    expect(pendingCodes).toEqual(['SLV-0007', 'SLV-0005'])
+    const first = within(pending.getByRole('heading', { name: 'SLV-0007' }).closest('article')!)
+    expect(first.getByText('En proceso · saldo pendiente')).toBeInTheDocument()
+    expect(first.getByText(/Q\s?100[.,]00/)).toBeInTheDocument()
+    expect(first.getByText(/Q\s?25[.,]00/)).toBeInTheDocument()
+    expect(first.getByText(/Q\s?75[.,]00/)).toBeInTheDocument()
+    expect(first.getByRole('link', { name: 'Ver detalle de SLV-0007' })).toHaveAttribute('href', '/mis-pedidos/7')
+    expect(within(pending.getByRole('heading', { name: 'SLV-0005' }).closest('article')!).getByText('Finalizado · saldo pendiente')).toBeInTheDocument()
+
+    const history = within(screen.getByRole('region', { name: /Historial de pagos/ }))
+    expect(within((await history.findByRole('heading', { name: 'SLV-0008' })).closest('article')!).getByText('En proceso · pagado')).toBeInTheDocument()
+    expect(within(history.getByRole('heading', { name: 'SLV-0003' }).closest('article')!).getByText('Finalizado · pagado')).toBeInTheDocument()
+
+    expect(screen.getByText('Repartido en 2 pedidos con saldo.')).toBeInTheDocument()
+    expect(listMock).toHaveBeenCalledWith(expect.objectContaining({ saldo: 'pendiente', orden: 'prioridad' }), expect.any(AbortSignal))
+    expect(listMock).toHaveBeenCalledWith(expect.objectContaining({ saldo: 'pagado', orden: 'recientes', pagina: 1 }), expect.any(AbortSignal))
+    expect(paymentsMock).not.toHaveBeenCalled()
   })
 
-  it('mantiene el saldo visible cuando el pedido aun no tiene pagos', async () => {
-    listMock.mockResolvedValue({
-      pedidos: [{ id: 8, fecha_recibido: '2026-10-18T14:00:00Z', total: 40, estado_actual: { id: 1, nombre: 'Recibido', orden: 1 } }],
-      total: 1, pagina: 1, limite: 20,
-    })
-    paymentsMock.mockResolvedValue([])
-    balanceMock.mockResolvedValue({ pedido_id: 8, total: 40, total_pagado: 0, saldo_pendiente: 40 })
+  it('carga los abonos de un pedido al abrirlo', async () => {
+    const user = userEvent.setup()
+    serve((params) => params.saldo === 'pendiente' ? page([activeDue]) : page([]))
+    paymentsMock.mockResolvedValue([{ id: 1, pedido_id: 7, monto: 25, referencia: 'TRX-25', fecha_pago: '2026-10-19T14:00:00Z', metodo_pago: { id: 2, nombre: 'Transferencia' } }])
     renderPayments()
+    const card = within((await screen.findByRole('heading', { name: 'SLV-0007' })).closest('article')!)
+    await user.click(card.getByRole('button', { name: 'Ver abonos' }))
+    expect(await card.findByText('Transferencia')).toBeInTheDocument()
+    expect(card.getByRole('button', { name: 'Copiar referencia TRX-25' })).toHaveTextContent('TRX-25')
+    expect(paymentsMock).toHaveBeenCalledWith(7, expect.any(AbortSignal))
+  })
 
-    expect(await screen.findByText('Aún no hay pagos registrados para este pedido.')).toBeInTheDocument()
-    const card = within(screen.getByRole('heading', { name: 'SLV-0008' }).closest('article')!)
-    expect(card.getAllByText(/Q\s?40[.,]00/)).toHaveLength(2)
+  it('avisa cuando no hay pagos pendientes ni historial', async () => {
+    serve(() => page([]))
+    renderPayments()
+    expect(await screen.findByRole('heading', { name: 'No tienes pagos pendientes.' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Aún no tienes historial de pagos.' })).toBeInTheDocument()
+  })
+
+  it('filtra el historial por fecha, prenda y estado, y limpia filtros', async () => {
+    const user = userEvent.setup()
+    serve((params) => {
+      if (params.saldo === 'pendiente') return page([])
+      if (params.tipo_prenda_id === 2) return page([])
+      if (params.seccion === 'historial') return page([finishedPaid])
+      return page([activePaid, finishedPaid])
+    })
+    renderPayments()
+    const filters = within(await screen.findByRole('search', { name: 'Filtrar historial de pagos' }))
+    await user.selectOptions(filters.getByLabelText('Estado del pedido'), 'Pagado · finalizado')
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'SLV-0008' })).not.toBeInTheDocument())
+    expect(screen.getByRole('heading', { name: 'SLV-0003' })).toBeInTheDocument()
+    expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ saldo: 'pagado', seccion: 'historial' }), expect.any(AbortSignal))
+
+    await user.type(filters.getByLabelText('Desde'), '2026-10-01')
+    await user.selectOptions(filters.getByLabelText('Tipo de prenda'), 'Vestido')
+    expect(await screen.findByRole('heading', { name: 'No hay pagos con esos filtros.' })).toBeInTheDocument()
+    expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ fecha_desde: '2026-10-01', tipo_prenda_id: 2 }), expect.any(AbortSignal))
+
+    await user.click(screen.getAllByRole('button', { name: 'Limpiar filtros' })[0])
+    expect(await screen.findByRole('heading', { name: 'SLV-0008' })).toBeInTheDocument()
+  })
+
+  it('no consulta con un rango de fechas invertido', async () => {
+    const user = userEvent.setup()
+    serve((params) => params.saldo === 'pendiente' ? page([activeDue]) : page([finishedPaid]))
+    renderPayments()
+    const filters = within(await screen.findByRole('search', { name: 'Filtrar historial de pagos' }))
+    await user.type(filters.getByLabelText('Hasta'), '2026-10-01')
+    const calls = listMock.mock.calls.length
+    await user.type(filters.getByLabelText('Desde'), '2026-10-20')
+    expect(await filters.findByRole('alert')).toHaveTextContent('no puede ser posterior')
+    expect(listMock.mock.calls.length).toBe(calls)
   })
 
   it('muestra error y permite reintentar', async () => {
     const user = userEvent.setup()
-    listMock.mockRejectedValueOnce(new Error('fallo')).mockResolvedValueOnce({ pedidos: [], total: 0, pagina: 1, limite: 20 })
+    let fail = true
+    serve((params) => {
+      if (params.saldo === 'pendiente' && fail) { fail = false; throw new Error('fallo') }
+      return page([])
+    })
     renderPayments()
     expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar tus pagos')
     await user.click(screen.getByRole('button', { name: 'Intentar de nuevo' }))
-    expect(await screen.findByRole('heading', { name: 'Aún no tienes pagos.' })).toBeInTheDocument()
-    expect(listMock).toHaveBeenCalledTimes(2)
-  })
-
-  it('separa los pedidos con saldo de los liquidados', async () => {
-    const user = userEvent.setup()
-    listMock.mockResolvedValue({
-      pedidos: [
-        { id: 7, fecha_recibido: '2026-10-15T14:00:00Z', total: 100, estado_actual: { id: 2, nombre: 'En proceso', orden: 2 } },
-        { id: 8, fecha_recibido: '2026-10-16T14:00:00Z', total: 40, estado_actual: { id: 5, nombre: 'Entregado', orden: 5 } },
-      ],
-      total: 2, pagina: 1, limite: 20,
-    })
-    paymentsMock.mockResolvedValue([])
-    balanceMock.mockImplementation(async (id: number) => id === 7
-      ? { pedido_id: 7, total: 100, total_pagado: 25, saldo_pendiente: 75 }
-      : { pedido_id: 8, total: 40, total_pagado: 40, saldo_pendiente: 0 })
-    renderPayments()
-    expect(await screen.findByText('Corresponde a 1 pedido con saldo.')).toBeInTheDocument()
-    await user.click(screen.getByRole('tab', { name: /Liquidados/ }))
-    expect(screen.getByRole('heading', { name: 'SLV-0008' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'SLV-0007' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('tab', { name: /Con saldo/ }))
-    expect(screen.getByRole('heading', { name: 'SLV-0007' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'SLV-0008' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'No tienes pagos pendientes.' })).toBeInTheDocument()
   })
 })

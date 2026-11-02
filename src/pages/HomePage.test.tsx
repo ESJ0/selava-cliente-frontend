@@ -7,7 +7,7 @@ import { AppRoutes } from '../routes/AppRoutes'
 import { useProfilePhoto } from '../store/profilePhoto'
 import { useClientSession } from '../store/session'
 
-vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn(), getOwnOrderDetail: vi.fn().mockRejectedValue(new Error('sin detalle')) }))
+vi.mock('../api/orders', () => ({ getOwnOrders: vi.fn(), getOwnGarmentTypes: vi.fn().mockResolvedValue([]), getOwnOrderDetail: vi.fn().mockRejectedValue(new Error('sin detalle')) }))
 vi.mock('../api/profile', () => ({
   getClientProfile: vi.fn().mockResolvedValue({ id: 7, nombre: 'Ana', apellido: 'Pérez', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', activo: true, tiene_foto_perfil: false }),
   getClientProfilePhoto: vi.fn(), updateClientProfile: vi.fn(), changeClientPassword: vi.fn(), uploadClientProfilePhoto: vi.fn(), deleteClientProfilePhoto: vi.fn(),
@@ -84,18 +84,30 @@ describe('Home SEL-94', () => {
     expect(screen.getByRole('link', { name: 'Ver mis pedidos' })).toHaveAttribute('href', '/mis-pedidos')
   })
 
-  it('conecta la tarjeta del Home con el pedido activo más reciente', async () => {
+  it('muestra cada pedido activo en su propia tarjeta con estado, fecha, total, saldo y detalle', async () => {
     getOwnOrdersMock.mockResolvedValue({
       pedidos: [
-        { id: 12, fecha_recibido: '2026-10-10T10:00:00Z', total: 45, estado_actual: { id: 2, nombre: 'Rackeado', orden: 2 } },
-        { id: 11, fecha_recibido: '2026-10-09T10:00:00Z', total: 30, estado_actual: { id: 3, nombre: 'Entregado', orden: 3 } },
-      ], total: 2, pagina: 1, limite: 100,
+        { id: 12, fecha_recibido: '2026-10-10T10:00:00Z', total: 45, total_pagado: 20, saldo_pendiente: 25, en_proceso: true, tipos_prenda: ['Camisa'], estado_actual: { id: 2, nombre: 'Rackeado', orden: 2 } },
+        { id: 10, fecha_recibido: '2026-10-08T10:00:00Z', total: 30, total_pagado: 30, saldo_pendiente: 0, en_proceso: true, estado_actual: { id: 1, nombre: 'Recibido', orden: 1 } },
+        // Un pedido que acaba de finalizar ya no debe mostrarse aunque llegue en la respuesta.
+        { id: 9, fecha_recibido: '2026-10-07T10:00:00Z', total: 30, total_pagado: 30, saldo_pendiente: 0, en_proceso: false, estado_actual: { id: 6, nombre: 'Finalizado', orden: 6, es_terminal: true } },
+      ], total: 3, pagina: 1, limite: 100,
     })
     useClientSession.getState().setSession(testSession)
     renderPortal()
-    expect(await screen.findByText('SLV-0012')).toBeInTheDocument()
-    expect(screen.getByText('Rackeado')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Ver detalle/ })).toHaveAttribute('href', '/mis-pedidos/12')
+    const first = within((await screen.findByRole('heading', { name: 'SLV-0012' })).closest('article')!)
+    expect(first.getByRole('status', { name: 'Estado actual: Rackeado' })).toBeInTheDocument()
+    expect(first.getByText(/recibido el/i)).toBeInTheDocument()
+    expect(first.getByText(/Q\s?45[.,]00/)).toBeInTheDocument()
+    expect(first.getByText('Saldo pendiente')).toBeInTheDocument()
+    expect(first.getByText(/Q\s?25[.,]00/)).toBeInTheDocument()
+    expect(first.getByRole('link', { name: 'Ver detalle de SLV-0012' })).toHaveAttribute('href', '/mis-pedidos/12')
+    const second = within(screen.getByRole('heading', { name: 'SLV-0010' }).closest('article')!)
+    expect(second.getByText('Al día')).toBeInTheDocument()
+    expect(second.getByRole('link', { name: 'Ver detalle de SLV-0010' })).toHaveAttribute('href', '/mis-pedidos/10')
+    expect(screen.queryByRole('heading', { name: 'SLV-0009' })).not.toBeInTheDocument()
+    expect(screen.getByText('pedidos activos')).toBeInTheDocument()
+    expect(getOwnOrdersMock).toHaveBeenCalledWith(expect.objectContaining({ seccion: 'activos' }), expect.any(AbortSignal))
   })
 
   it('cierra la sesión y vuelve al formulario de acceso', async () => {

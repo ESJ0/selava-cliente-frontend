@@ -1,13 +1,13 @@
-import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { getOwnOrders } from '../api/orders'
-import { loadOrderDetail } from '../hooks/useOrderFlow'
+import { useOrderFlow } from '../hooks/useOrderFlow'
+import { useOwnOrders } from '../hooks/useOwnOrders'
 import { Bubbles, DryCleanRail, PageHeading, StateChip, delay } from '../components/portal/PortalBits'
 import { ArrowRightIcon, BagIcon, CardIcon, SparkIcon, SpinnerIcon, UserIcon } from '../components/portal/icons'
 import { useClientSession } from '../store/session'
-import type { OwnOrderDetail, OwnOrderSummary } from '../types/order'
-import { isActiveOrder, orderCode } from '../utils/format'
-import { SELAVA_PHONE, SELAVA_PHONE_HREF, countdown, formatLongDate, sortedStages } from '../utils/portal'
+import type { OwnOrderSummary } from '../types/order'
+import { orderCode } from '../utils/format'
+import { SELAVA_PHONE, SELAVA_PHONE_HREF, countdown, formatLongDate, formatShortDate, garmentsText, isOrderInProcess, money, orderAmounts, sortedStages } from '../utils/portal'
 
 const ribbon = ['Lavado', 'Secado', 'Planchado', 'Dry clean', 'Tu ropa en buenas manos']
 
@@ -17,23 +17,37 @@ const tiles = [
   { to: '/mi-perfil', title: 'Mi perfil', text: 'Actualiza tus datos de contacto y contraseña.', Icon: UserIcon },
 ]
 
-function ActiveOrderCard({ order, detail }: { order: OwnOrderSummary; detail: OwnOrderDetail | null }) {
+function ActiveOrderCard({ order, index }: { order: OwnOrderSummary; index: number }) {
+  const detail = useOrderFlow(order.id)
   const stages = sortedStages(detail?.flujo_operativo)
   const due = countdown(order.fecha_entrega_estimada)
+  const { total, balance } = orderAmounts(order)
+  const code = orderCode(order.id)
+  const garments = garmentsText(order)
+  const titleId = `active-order-${order.id}`
   return (
-    <>
+    <article className="cp-st cp-active" style={delay(.3 + Math.min(index, 4) * .08)} aria-labelledby={titleId}>
+      <Bubbles items={[{ right: '8%', size: 26 }, { right: '22%', size: 14, delay: 3 }, { right: '40%', size: 20, delay: 6 }]} />
       <div className="cp-active-head">
         <div>
-          <h2 className="cp-eyebrow-sky" id="active-order-title">Pedido activo</h2>
-          <p className="cp-disp cp-active-code">{orderCode(order.id)}</p>
+          <p className="cp-eyebrow-sky">Pedido activo · recibido el {formatShortDate(order.fecha_recibido)}</p>
+          <h2 className="cp-disp cp-active-code" id={titleId}>{code}</h2>
+          {garments && <p className="cp-active-garments">{garments}</p>}
         </div>
-        <StateChip status={detail?.estado_actual ?? order.estado_actual} style={delay(1.9)} />
+        <StateChip status={detail?.estado_actual ?? order.estado_actual} style={delay(.6)} />
       </div>
       {stages.length > 0 && <DryCleanRail stages={stages} />}
+      <dl className="cp-active-money">
+        <div><dt>Total</dt><dd className="cp-disp">{money(total)}</dd></div>
+        <div className={balance > 0.004 ? 'is-due' : 'is-paid'}>
+          <dt>{balance > 0.004 ? 'Saldo pendiente' : 'Pagado'}</dt>
+          <dd className="cp-disp">{balance > 0.004 ? money(balance) : 'Al día'}</dd>
+        </div>
+      </dl>
       <div className="cp-active-foot">
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
           <div className="cp-days">
-            <strong className="cp-disp cp-pop" style={delay(1.2)}>{due.value}</strong>
+            <strong className="cp-disp cp-pop" style={delay(.9)}>{due.value}</strong>
             <span>{due.unit}</span>
           </div>
           <div>
@@ -41,43 +55,28 @@ function ActiveOrderCard({ order, detail }: { order: OwnOrderSummary; detail: Ow
             <p className="cp-disp cp-due-date">{formatLongDate(order.fecha_entrega_estimada)}</p>
           </div>
         </div>
-        <Link className="cp-lnk-light" to={`/mis-pedidos/${order.id}`}>Ver detalle<ArrowRightIcon size={18} /></Link>
+        <Link className="cp-lnk-light" to={`/mis-pedidos/${order.id}`} aria-label={`Ver detalle de ${code}`}>Ver detalle<ArrowRightIcon size={18} /></Link>
       </div>
-    </>
+    </article>
+  )
+}
+
+function ActiveState({ children, role }: { children: ReactNode; role?: string }) {
+  return (
+    <section className="cp-st cp-active" style={delay(.3)} aria-label="Pedidos activos" role={role}>
+      <Bubbles items={[{ right: '8%', size: 26 }, { right: '22%', size: 14, delay: 3 }, { right: '40%', size: 20, delay: 6 }]} />
+      <div className="cp-active-empty">{children}</div>
+    </section>
   )
 }
 
 export function HomePage() {
   const session = useClientSession((state) => state.session)
   const name = session?.customer.nombre
-  const [orders, setOrders] = useState<OwnOrderSummary[]>([])
-  const [detail, setDetail] = useState<OwnOrderDetail | null>(null)
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [reloadKey, setReloadKey] = useState(0)
-  const retry = useCallback(() => setReloadKey((key) => key + 1), [])
-
-  useEffect(() => {
-    if (!session) return
-    const controller = new AbortController()
-    setStatus('loading')
-    setDetail(null)
-    getOwnOrders({ limite: 100, orden: 'recientes' }, controller.signal)
-      .then(({ pedidos }) => {
-        setOrders(pedidos)
-        setStatus('ready')
-        const active = pedidos.find((pedido) => isActiveOrder(pedido.estado_actual.nombre))
-        if (!active) return
-        // El resumen no trae el flujo operativo; se consulta el detalle para dibujar el riel.
-        void loadOrderDetail(active.id, controller.signal).then((order) => { if (order && !controller.signal.aborted) setDetail(order) })
-      })
-      .catch((error: unknown) => {
-        if (!controller.signal.aborted && (error as { name?: string })?.name !== 'CanceledError') setStatus('error')
-      })
-    return () => controller.abort()
-  }, [reloadKey, session])
-
-  const activeOrders = orders.filter((order) => isActiveOrder(order.estado_actual.nombre))
-  const activeOrder = activeOrders[0]
+  // Solo pedidos en proceso: al pasar a Finalizado (o Cancelado) dejan de aparecer en el Inicio.
+  const { data, status, retry } = useOwnOrders(session ? { seccion: 'activos', limite: 100, orden: 'recientes' } : null)
+  const activeOrders = status === 'ready' ? (data?.pedidos ?? []).filter(isOrderInProcess) : []
+  const ready = status === 'ready'
 
   return (
     <>
@@ -88,39 +87,39 @@ export function HomePage() {
         >
           <div className="cp-st cp-count-pill" style={delay(.24)}>
             <span><BagIcon size={20} /></span>
-            <span style={{ fontSize: 15 }}><strong className="cp-disp">{status === 'ready' ? activeOrders.length : '–'}</strong> {activeOrders.length === 1 ? 'pedido activo' : 'pedidos activos'}</span>
+            <span style={{ fontSize: 15 }}><strong className="cp-disp">{ready ? activeOrders.length : '–'}</strong> {activeOrders.length === 1 ? 'pedido activo' : 'pedidos activos'}</span>
           </div>
         </PageHeading>
 
         <div className="cp-home-grid">
-          <section className="cp-st cp-active" style={delay(.3)} aria-labelledby="active-order-title">
-            <Bubbles items={[{ right: '8%', size: 26 }, { right: '22%', size: 14, delay: 3 }, { right: '40%', size: 20, delay: 6 }]} />
-            {status === 'loading' && (
-              <div className="cp-active-empty" role="status">
-                <h2 className="cp-eyebrow-sky" id="active-order-title">Pedido activo</h2>
-                <SpinnerIcon className="cp-spin" size={30} />Cargando pedido activo…
-              </div>
+          <div className="cp-active-stack">
+            {(status === 'loading' || status === 'idle') && (
+              <ActiveState role="status">
+                <p className="cp-eyebrow-sky">Pedidos activos</p>
+                <SpinnerIcon className="cp-spin" size={30} />Cargando pedidos activos…
+              </ActiveState>
             )}
             {status === 'error' && (
-              <div className="cp-active-empty" role="alert">
-                <h2 className="cp-eyebrow-sky" id="active-order-title">Pedido activo</h2>
-                <p>No pudimos cargar tu pedido activo.</p>
+              <ActiveState role="alert">
+                <p className="cp-eyebrow-sky">Pedidos activos</p>
+                <p>No pudimos cargar tus pedidos activos.</p>
                 <button className="cp-btn-dark" style={{ background: '#FFC93C', color: '#0A2433' }} type="button" onClick={retry}>Reintentar</button>
-              </div>
+              </ActiveState>
             )}
-            {status === 'ready' && !activeOrder && (
-              <div className="cp-active-empty">
-                <p className="cp-eyebrow-sky" id="active-order-title">Pedido activo</p>
+            {ready && activeOrders.length === 0 && (
+              <ActiveState>
+                <p className="cp-eyebrow-sky">Pedidos activos</p>
                 <svg className="cp-swing" width="96" height="90" viewBox="0 0 76 70" aria-hidden="true">
                   <path d="M38 2 a6 6 0 1 1 6 6 c-3 0-6 2-6 6 v4" fill="none" stroke="#5BC3EC" strokeWidth="3" strokeLinecap="round" />
                   <path d="M38 18 L4 46 H72 Z" fill="none" stroke="#5BC3EC" strokeWidth="3" strokeLinejoin="round" />
                 </svg>
                 <h2 className="cp-disp">No tienes pedidos activos.</h2>
                 <p>Aquí encontrarás el estado y la entrega estimada de tus próximos pedidos.</p>
-              </div>
+                <Link className="cp-lnk-light" to="/mis-pedidos">Ver historial de pedidos<ArrowRightIcon size={18} /></Link>
+              </ActiveState>
             )}
-            {status === 'ready' && activeOrder && <ActiveOrderCard order={activeOrder} detail={detail?.id === activeOrder.id ? detail : null} />}
-          </section>
+            {ready && activeOrders.map((order, index) => <ActiveOrderCard key={order.id} order={order} index={index} />)}
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <section className="cp-st cp-promo-card" style={delay(.4)}>

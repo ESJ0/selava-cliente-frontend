@@ -1,4 +1,4 @@
-import type { OwnOrderDetail, OwnOrderFlow, OwnOrderHistoryEntry, OwnOrdersParams, OwnOrdersResponse } from '../types/order'
+import type { GarmentTypeOption, OwnOrderDetail, OwnOrderFlow, OwnOrderHistoryEntry, OwnOrdersParams, OwnOrdersResponse } from '../types/order'
 import { authenticatedApi } from './client'
 
 type OwnOrderDetailPayload = Omit<OwnOrderDetail, 'flujo_operativo'> & {
@@ -26,5 +26,11 @@ export async function getOwnOrderDetail(orderId: number, signal?: AbortSignal): 
 
 export async function getOwnOrderHistory(orderId: number, signal?: AbortSignal): Promise<OwnOrderHistoryEntry[]> {
   const { data } = await authenticatedApi.get<OwnOrderHistoryEntry[] | null>(`/cliente/pedidos/${orderId}/historial-estados`, { signal })
+  return data ?? []
+}
+
+/** Tipos de prenda presentes en los pedidos del cliente (opciones de filtro). */
+export async function getOwnGarmentTypes(signal?: AbortSignal): Promise<GarmentTypeOption[]> {
+  const { data } = await authenticatedApi.get<GarmentTypeOption[] | null>('/cliente/pedidos/tipos-prenda', { signal })
   return data ?? []
 }

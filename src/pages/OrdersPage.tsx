@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getOwnOrders } from '../api/orders'
-import { Bubbles, EmptyHanger, FilterTabs, PageHeading, PortalError, PortalLoading, delay } from '../components/portal/PortalBits'
-import { ArrowRightIcon, ChevronDownIcon, PhoneIcon, SearchIcon, ShirtIcon } from '../components/portal/icons'
+import { Bubbles, EmptyHanger, HistoryFilters, NoMatches, PageHeading, Pager, PortalError, PortalLoading, SectionHeader, delay } from '../components/portal/PortalBits'
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon, PhoneIcon, ShirtIcon } from '../components/portal/icons'
 import { useOrderFlow } from '../hooks/useOrderFlow'
-import type { OwnOrderSummary } from '../types/order'
-import { isActiveOrder, orderCode } from '../utils/format'
-import { SELAVA_PHONE, SELAVA_PHONE_HREF, countdown, currentStageIndex, formatLongDate, formatShortDate, money, sortedStages } from '../utils/portal'
-
-const tabNames = ['Todos', 'Activos', 'Entregados']
+import { useOwnGarmentTypes, useOwnOrders } from '../hooks/useOwnOrders'
+import type { OwnOrderSummary, OwnOrdersParams } from '../types/order'
+import { orderCode } from '../utils/format'
+import { EMPTY_HISTORY_FILTERS, SELAVA_PHONE, SELAVA_PHONE_HREF, countdown, currentStageIndex, formatLongDate, formatShortDate, garmentsText, hasHistoryFilters, historyRangeError, isOrderCancelled, isOrderInProcess, money, orderAmounts, sortedStages, type HistoryFilterValue } from '../utils/portal'
 
 function segmentColor(index: number, current: number) {
   if (index < current) return '#5BC3EC'
@@ -22,7 +20,10 @@ function OrderTicket({ order, index }: { order: OwnOrderSummary; index: number }
   const stages = sortedStages(detail?.flujo_operativo)
   const current = currentStageIndex(stages)
   const pct = detail ? Math.min(100, Math.max(0, Math.round(detail.flujo_operativo.progreso_porcentaje))) : null
-  const active = isActiveOrder(order.estado_actual.nombre)
+  const active = isOrderInProcess(order)
+  const cancelled = isOrderCancelled(order)
+  const { balance } = orderAmounts(order)
+  const garments = garmentsText(order)
   const due = countdown(order.fecha_entrega_estimada)
   const code = orderCode(order.id)
   const detailId = `pedido-${order.id}-detalle`
@@ -42,16 +43,16 @@ function OrderTicket({ order, index }: { order: OwnOrderSummary; index: number }
             <span className="cp-garm"><ShirtIcon size={26} /></span>
             <div>
               <h2 className="cp-disp" id={`pedido-${order.id}`}>{code}</h2>
-              <p>Recibido el {formatShortDate(order.fecha_recibido)}</p>
+              <p>Recibido el {formatShortDate(order.fecha_recibido)}{garments ? ` · ${garments}` : ''}</p>
             </div>
           </div>
-          <span className={`cp-chip${active ? '' : ' ok'}`} role="status" aria-label={`Estado actual: ${order.estado_actual.nombre}`}><span className="cp-dot" />{order.estado_actual.nombre}</span>
+          <span className={`cp-chip${active ? '' : cancelled ? ' off' : ' ok'}`} role="status" aria-label={`Estado actual: ${order.estado_actual.nombre}`}><span className="cp-dot" />{order.estado_actual.nombre}</span>
         </div>
 
         <dl className="cp-meta">
-          <div><dt>Recibido</dt><dd>{formatShortDate(order.fecha_recibido)}</dd></div>
-          <div><dt>Entrega estimada</dt><dd>{formatShortDate(order.fecha_entrega_estimada)}</dd></div>
+          <div><dt>{active ? 'Entrega estimada' : 'Recibido'}</dt><dd>{formatShortDate(active ? order.fecha_entrega_estimada : order.fecha_recibido)}</dd></div>
           <div><dt>Total</dt><dd>{money(order.total)}</dd></div>
+          <div><dt>Saldo</dt><dd className={!cancelled && balance > 0.004 ? 'cp-owed' : undefined}>{cancelled ? '—' : balance > 0.004 ? money(balance) : 'Pagado'}</dd></div>
           <div>
             <dt>Progreso · {pct === null ? '—' : `${pct}%`}</dt>
             <dd className="cp-segs" aria-hidden="true">
@@ -111,61 +112,79 @@ function OrderTicket({ order, index }: { order: OwnOrderSummary; index: number }
   )
 }
 
+const HISTORY_LIMIT = 8
+
 export function OrdersPage() {
-  const [orders, setOrders] = useState<OwnOrderSummary[]>([])
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [reloadKey, setReloadKey] = useState(0)
-  const [tab, setTab] = useState(0)
-  const [query, setQuery] = useState('')
-  const retry = useCallback(() => setReloadKey((key) => key + 1), [])
+  const active = useOwnOrders({ seccion: 'activos', limite: 100, orden: 'recientes' })
+  const types = useOwnGarmentTypes()
+  const [filters, setFilters] = useState<HistoryFilterValue>(EMPTY_HISTORY_FILTERS)
+  const [page, setPage] = useState(1)
+  const rangeError = historyRangeError(filters)
+  const historyParams = useMemo<OwnOrdersParams | null>(() => rangeError ? null : {
+    seccion: 'historial',
+    orden: 'recientes',
+    pagina: page,
+    limite: HISTORY_LIMIT,
+    ...(filters.desde ? { fecha_desde: filters.desde } : {}),
+    ...(filters.hasta ? { fecha_hasta: filters.hasta } : {}),
+    ...(filters.tipo ? { tipo_prenda_id: Number(filters.tipo) } : {}),
+  }, [filters, page, rangeError])
+  const history = useOwnOrders(historyParams)
 
-  useEffect(() => {
-    const controller = new AbortController()
-    setStatus('loading')
-    getOwnOrders({ limite: 100, orden: 'recientes' }, controller.signal)
-      .then((response) => { setOrders(response.pedidos); setStatus('ready') })
-      .catch((error) => { if (error?.name !== 'CanceledError') setStatus('error') })
-    return () => controller.abort()
-  }, [reloadKey])
-
-  const activeCount = orders.filter((order) => isActiveOrder(order.estado_actual.nombre)).length
-  const counts = [orders.length, activeCount, orders.length - activeCount]
-  const search = query.trim().toUpperCase().replace(/\s+/g, '')
-  const visible = useMemo(() => orders
-    .filter((order) => tab === 0 || (tab === 1) === isActiveOrder(order.estado_actual.nombre))
-    .filter((order) => !search || orderCode(order.id).includes(search) || String(order.id) === search.replace(/^#/, '')), [orders, tab, search])
+  const changeFilters = (value: HistoryFilterValue) => { setFilters(value); setPage(1) }
+  const clear = () => changeFilters(EMPTY_HISTORY_FILTERS)
+  const summary = active.data?.resumen ?? history.data?.resumen
+  const activeOrders = active.data?.pedidos ?? []
+  const historyOrders = history.data?.pedidos ?? []
+  const filtered = hasHistoryFilters(filters)
+  const historyCount = summary?.historial ?? history.data?.total ?? 0
+  // Se decide con el resumen del servidor (no depende de filtros) para no desmontar los filtros al limpiarlos.
+  const noOrdersAtAll = summary ? summary.activos + summary.historial === 0 : active.status === 'ready' && history.status === 'ready' && activeOrders.length === 0 && !filtered && historyOrders.length === 0
 
   return (
     <div className="cp-main">
-      <PageHeading title="Mis pedidos." lead="Consulta el estado y los detalles de tus prendas.">
+      <PageHeading title="Mis pedidos." lead="Tus pedidos en proceso primero y, abajo, el historial de los que ya finalizaron.">
         <div className="cp-st" style={{ ...delay(.24), display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <div className="cp-stat dark"><p>Activos</p><strong className="cp-disp">{status === 'ready' ? activeCount : '–'}</strong></div>
-          <div className="cp-stat light"><p>Total en pedidos</p><strong className="cp-disp">{status === 'ready' ? money(orders.reduce((sum, order) => sum + order.total, 0)) : '–'}</strong></div>
+          <div className="cp-stat dark"><p>Activos</p><strong className="cp-disp">{summary ? summary.activos : '–'}</strong></div>
+          <div className="cp-stat light"><p>Total en pedidos</p><strong className="cp-disp">{summary ? money(summary.total_facturado) : '–'}</strong></div>
         </div>
       </PageHeading>
 
-      {status === 'loading' && <PortalLoading label="Cargando pedidos…" />}
-      {status === 'error' && <PortalError title="No pudimos cargar tus pedidos." retry={retry} />}
-      {status === 'ready' && orders.length === 0 && <EmptyHanger title="Aún no tienes pedidos." text="Cuando registremos tu primer pedido, aparecerá aquí con su estado y fecha estimada." />}
-      {status === 'ready' && orders.length > 0 && (
+      {noOrdersAtAll ? (
+        <EmptyHanger title="Aún no tienes pedidos." text="Cuando registremos tu primer pedido, aparecerá aquí con su estado y fecha estimada." />
+      ) : (
         <>
-          <div className="cp-st cp-toolbar" style={delay(.3)}>
-            <FilterTabs label="Filtrar pedidos" tabs={tabNames.map((label, index) => ({ label, count: counts[index] }))} selected={tab} onSelect={setTab} />
-            <label className="cp-search">
-              <SearchIcon size={20} stroke="#5A7280" />
-              <span className="cp-sr-only">Buscar pedido</span>
-              <input type="search" placeholder="Buscar por código, ej. SLV-0015" value={query} onChange={(event) => setQuery(event.target.value)} />
-            </label>
-          </div>
-          <div className="cp-list">
-            {visible.map((order, index) => <OrderTicket key={order.id} order={order} index={index} />)}
-            {visible.length === 0 && (
-              <EmptyHanger
-                title={search ? 'No encontramos ese pedido' : tab === 2 ? 'Aún no tienes pedidos entregados' : 'No hay pedidos aquí'}
-                text={search ? 'Revisa el código e intenta de nuevo.' : tab === 2 ? 'Cuando entreguemos tu ropa, aparecerá en esta lista.' : 'No tienes pedidos en proceso en este momento.'}
-              />
+          <section className="cp-sec" aria-labelledby="pedidos-activos">
+            <SectionHeader id="pedidos-activos" title="Pedidos activos" count={active.status === 'ready' ? activeOrders.length : undefined} text="Pedidos que estamos lavando, secando, planchando o que esperan entrega." />
+            {(active.status === 'loading' || active.status === 'idle') && <PortalLoading label="Cargando pedidos activos…" />}
+            {active.status === 'error' && <PortalError title="No pudimos cargar tus pedidos activos." retry={active.retry} />}
+            {active.status === 'ready' && activeOrders.length === 0 && (
+              <div className="cp-empty cp-empty-sm cp-pop" role="status">
+                <span className="cp-empty-check"><CheckIcon size={30} /></span>
+                <h3 className="cp-disp">No tienes pedidos activos.</h3>
+                <p>Cuando nos dejes ropa, verás aquí su avance.</p>
+              </div>
             )}
-          </div>
+            {active.status === 'ready' && activeOrders.length > 0 && (
+              <div className="cp-list">{activeOrders.map((order, index) => <OrderTicket key={order.id} order={order} index={index} />)}</div>
+            )}
+          </section>
+
+          <section className="cp-sec" aria-labelledby="historial-pedidos">
+            <SectionHeader id="historial-pedidos" title="Historial de pedidos" count={summary ? historyCount : undefined} text="Pedidos finalizados o cancelados, del más reciente al más antiguo." />
+            <HistoryFilters label="Filtrar historial de pedidos" value={filters} onChange={changeFilters} types={types} error={rangeError} />
+            {history.status === 'loading' && !history.data && <PortalLoading label="Cargando historial…" />}
+            {history.status === 'error' && <PortalError title="No pudimos cargar tu historial." retry={history.retry} />}
+            {history.data && history.status !== 'error' && !rangeError && (
+              <div className={`cp-list${history.status === 'loading' ? ' is-refreshing' : ''}`} aria-busy={history.status === 'loading'}>
+                {historyOrders.map((order, index) => <OrderTicket key={order.id} order={order} index={index} />)}
+                {historyOrders.length === 0 && (filtered
+                  ? <NoMatches title="No hay pedidos con esos filtros." text="Prueba con otras fechas o tipo de prenda." onClear={clear} />
+                  : <EmptyHanger title="Aún no tienes historial." text="Cuando un pedido finalice, pasará automáticamente a esta lista." />)}
+                <Pager label="Páginas del historial de pedidos" page={page} total={history.data.total} limit={HISTORY_LIMIT} onPage={setPage} />
+              </div>
+            )}
+          </section>
         </>
       )}
     </div>
