@@ -151,4 +151,11 @@ describe('autenticación de clientes', () => {
     expect(resetPasswordMock).toHaveBeenCalledWith('token-seguro', 'nueva-segura')
     expect(await screen.findByRole('status')).toHaveTextContent('Contraseña actualizada correctamente.')
   })
+
+  it('lleva un enlace con token de /recuperar-contrasena a la página de nueva contraseña', async () => {
+    validatePasswordResetTokenMock.mockResolvedValue()
+    renderRoute('/recuperar-contrasena?token=token-seguro')
+    expect(await screen.findByLabelText('Nueva contraseña')).toBeInTheDocument()
+    await waitFor(() => expect(validatePasswordResetTokenMock).toHaveBeenCalledWith('token-seguro', expect.any(AbortSignal)))
+  })
 })
