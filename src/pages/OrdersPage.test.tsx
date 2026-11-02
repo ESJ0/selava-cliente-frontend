@@ -91,6 +91,20 @@ describe('Mis pedidos: activos e historial', () => {
     expect(filters.getByLabelText('Tipo de prenda')).toHaveValue('')
   })
 
+  it('nunca muestra un pedido finalizado como activo aunque el servidor no filtre', async () => {
+    // Respuesta de un backend sin los campos nuevos: ignora seccion y devuelve todo.
+    const legacyFinalizado: OwnOrderSummary = { id: 18, fecha_recibido: '2026-11-02T14:00:00Z', total: 70, estado_actual: { id: 6, nombre: 'Finalizado', orden: 60 } }
+    const legacyRecibido: OwnOrderSummary = { id: 16, fecha_recibido: '2026-10-30T14:00:00Z', total: 120, estado_actual: { id: 1, nombre: 'Recibido', orden: 10 } }
+    serve(() => ({ pedidos: [legacyFinalizado, legacyRecibido], total: 2, pagina: 1, limite: 100 }))
+    renderAt('/mis-pedidos')
+    const activeSection = within(await screen.findByRole('region', { name: /Pedidos activos/ }))
+    expect(await activeSection.findByRole('heading', { name: 'SLV-0016' })).toBeInTheDocument()
+    expect(activeSection.queryByRole('heading', { name: 'SLV-0018' })).not.toBeInTheDocument()
+    const historySection = within(screen.getByRole('region', { name: /Historial de pedidos/ }))
+    expect(await historySection.findByRole('heading', { name: 'SLV-0018' })).toBeInTheDocument()
+    expect(historySection.queryByRole('heading', { name: 'SLV-0016' })).not.toBeInTheDocument()
+  })
+
   it('pagina el historial cuando hay muchos pedidos', async () => {
     const user = userEvent.setup()
     serve((params) => {

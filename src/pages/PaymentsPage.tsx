@@ -7,7 +7,7 @@ import { useOwnGarmentTypes, useOwnOrders } from '../hooks/useOwnOrders'
 import type { OwnOrderSummary, OwnOrdersParams } from '../types/order'
 import type { OwnPayment } from '../types/payment'
 import { orderCode } from '../utils/format'
-import { EMPTY_HISTORY_FILTERS, PAYMENT_SITUATION_LABEL, SELAVA_PHONE, SELAVA_PHONE_HREF, formatDateTime, formatShortDate, garmentsText, hasHistoryFilters, historyRangeError, money, orderAmounts, paymentSituation, type HistoryFilterValue } from '../utils/portal'
+import { EMPTY_HISTORY_FILTERS, PAYMENT_SITUATION_LABEL, SELAVA_PHONE, SELAVA_PHONE_HREF, formatDateTime, formatShortDate, garmentsText, hasHistoryFilters, historyRangeError, isOrderInProcess, money, orderAmounts, paymentSituation, type HistoryFilterValue } from '../utils/portal'
 
 const HISTORY_LIMIT = 8
 const PAYMENT_STATES = {
@@ -159,8 +159,11 @@ export function PaymentsPage() {
   const changeFilters = (value: HistoryFilterValue) => { setFilters(value); setPage(1) }
   const clear = () => changeFilters(EMPTY_HISTORY_FILTERS)
   const summary = pending.data?.resumen ?? history.data?.resumen
-  const pendingOrders = pending.data?.pedidos ?? []
-  const historyOrders = history.data?.pedidos ?? []
+  // Defensa en el cliente: pendientes solo con saldo (activos primero); historial solo totalmente pagados.
+  const pendingOrders = (pending.data?.pedidos ?? [])
+    .filter((order) => { const situation = paymentSituation(order); return situation === 'activo-saldo' || situation === 'finalizado-saldo' })
+    .sort((a, b) => Number(isOrderInProcess(b)) - Number(isOrderInProcess(a)))
+  const historyOrders = (history.data?.pedidos ?? []).filter((order) => { const situation = paymentSituation(order); return situation === 'activo-pagado' || situation === 'finalizado-pagado' })
   const filtered = hasHistoryFilters(filters)
   const hasAnyOrder = summary ? summary.activos + summary.historial > 0 : pendingOrders.length > 0 || historyOrders.length > 0
   const eased = useCountUp(Boolean(summary) && hasAnyOrder)
