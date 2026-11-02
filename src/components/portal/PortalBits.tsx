@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import type { OrderFlowStage, OrderStatus } from '../../types/order'
-import { currentStageIndex } from '../../utils/portal'
-import { AlertIcon, SpinnerIcon } from './icons'
+import { EMPTY_HISTORY_FILTERS, currentStageIndex, hasHistoryFilters, type HistoryFilterValue } from '../../utils/portal'
+import { AlertIcon, SearchIcon, SpinnerIcon } from './icons'
 
 export const delay = (seconds: number): CSSProperties => ({ animationDelay: `${seconds}s` })
 
@@ -124,5 +124,84 @@ export function DryCleanRail({ stages, detailed = false }: { stages: OrderFlowSt
         })}
       </ol>
     </>
+  )
+}
+
+export function SectionHeader({ id, title, count, text, children }: { id: string; title: string; count?: number; text?: string; children?: ReactNode }) {
+  return (
+    <div className="cp-sec-head cp-st">
+      <div>
+        <h2 className="cp-disp cp-sec-title" id={id}>{title}{typeof count === 'number' && <span className="cp-sec-count">{count}</span>}</h2>
+        {text && <p className="cp-sec-text">{text}</p>}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+interface FilterOption { value: string; label: string }
+
+export function HistoryFilters({ label, value, onChange, types, states, error }: {
+  label: string
+  value: HistoryFilterValue
+  onChange: (value: HistoryFilterValue) => void
+  types: { id: number; nombre: string }[]
+  /** Filtro adicional de estado (p. ej. estado de pago); se omite si no se envía. */
+  states?: { label: string; options: FilterOption[] }
+  error?: string
+}) {
+  const set = (patch: Partial<HistoryFilterValue>) => onChange({ ...value, ...patch })
+  const active = hasHistoryFilters(value)
+  return (
+    <form className="cp-filters cp-st" role="search" aria-label={label} onSubmit={(event) => event.preventDefault()}>
+      <label className="cp-field">
+        <span>Desde</span>
+        <input type="date" value={value.desde} max={value.hasta || undefined} onChange={(event) => set({ desde: event.target.value })} />
+      </label>
+      <label className="cp-field">
+        <span>Hasta</span>
+        <input type="date" value={value.hasta} min={value.desde || undefined} onChange={(event) => set({ hasta: event.target.value })} />
+      </label>
+      <label className="cp-field">
+        <span>Tipo de prenda</span>
+        <select value={value.tipo} onChange={(event) => set({ tipo: event.target.value })}>
+          <option value="">Todas las prendas</option>
+          {types.map((type) => <option key={type.id} value={String(type.id)}>{type.nombre}</option>)}
+        </select>
+      </label>
+      {states && (
+        <label className="cp-field">
+          <span>{states.label}</span>
+          <select value={value.estado} onChange={(event) => set({ estado: event.target.value })}>
+            {states.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+        </label>
+      )}
+      <button className="cp-clear" type="button" disabled={!active} onClick={() => onChange(EMPTY_HISTORY_FILTERS)}>Limpiar filtros</button>
+      {error && <p className="cp-filter-error" role="alert">{error}</p>}
+    </form>
+  )
+}
+
+export function Pager({ page, total, limit, onPage, label }: { page: number; total: number; limit: number; onPage: (page: number) => void; label: string }) {
+  const pages = Math.max(1, Math.ceil(total / limit))
+  if (pages <= 1) return null
+  return (
+    <nav className="cp-pager" aria-label={label}>
+      <button type="button" disabled={page <= 1} onClick={() => onPage(page - 1)}>Anterior</button>
+      <span>Página {page} de {pages}</span>
+      <button type="button" disabled={page >= pages} onClick={() => onPage(page + 1)}>Siguiente</button>
+    </nav>
+  )
+}
+
+export function NoMatches({ title, text, onClear }: { title: string; text: string; onClear: () => void }) {
+  return (
+    <div className="cp-empty cp-empty-sm cp-pop" role="status">
+      <span className="cp-empty-check"><SearchIcon size={30} /></span>
+      <h3 className="cp-disp">{title}</h3>
+      <p>{text}</p>
+      <button className="cp-btn-dark" type="button" onClick={onClear}>Limpiar filtros</button>
+    </div>
   )
 }

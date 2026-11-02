@@ -30,7 +30,25 @@ export interface OwnOrderSummary {
   fecha_recibido: string
   fecha_entrega_estimada?: string
   total: number
+  /** Importes oficiales calculados por el backend (mismo cálculo que /saldo). */
+  total_pagado?: number
+  saldo_pendiente?: number
+  /** true mientras el pedido no llega a un estado terminal (Finalizado o Cancelado). */
+  en_proceso?: boolean
+  cancelado?: boolean
+  tipos_prenda?: string[]
+  cantidad_prendas?: number
   estado_actual: OrderStatus
+}
+
+/** Totales de todos los pedidos vigentes del cliente; no dependen de los filtros. */
+export interface OwnOrdersTotals {
+  activos: number
+  historial: number
+  pedidos_con_saldo: number
+  saldo_pendiente: number
+  total_pagado: number
+  total_facturado: number
 }
 
 export interface OwnOrdersResponse {
@@ -38,7 +56,10 @@ export interface OwnOrdersResponse {
   total: number
   pagina: number
   limite: number
+  resumen?: OwnOrdersTotals
 }
+
+export interface GarmentTypeOption { id: number; nombre: string }
 
 export interface GarmentType { id: number; nombre: string; descripcion?: string; precio?: number | null; modalidad_cobro?: ChargeMode }
 export interface ServiceInfo { id: number; nombre: string; descripcion?: string; precio_base: number; tiempo_estimado_horas?: number }
@@ -85,5 +106,10 @@ export interface OwnOrdersParams {
   fecha_hasta?: string
   pagina?: number
   limite?: number
-  orden?: 'recientes' | 'antiguos'
+  orden?: 'recientes' | 'antiguos' | 'prioridad'
+  /** activos: en proceso · historial: finalizados o cancelados. */
+  seccion?: 'activos' | 'historial'
+  tipo_prenda_id?: number
+  /** pendiente: con saldo (sin cancelados) · pagado: sin saldo. */
+  saldo?: 'pendiente' | 'pagado'
 }
