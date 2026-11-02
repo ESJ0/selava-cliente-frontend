@@ -9,6 +9,8 @@ export interface ClientRegistration {
   email: string
   direccion: string
   password: string
+  /** Aceptación de los Términos y condiciones y del Aviso de privacidad (obligatoria). */
+  acepta_terminos: boolean
 }
 
 interface RegisteredClientResponse {

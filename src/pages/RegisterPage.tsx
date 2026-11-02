@@ -40,6 +40,8 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [showPasswords, setShowPasswords] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [termsError, setTermsError] = useState('')
 
   function updateField(field: RegistrationField, value: string) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -51,7 +53,9 @@ export function RegisterPage() {
     const validationErrors = validateRegistration(values)
     setErrors(validationErrors)
     setSubmitError('')
-    if (Object.keys(validationErrors).length > 0) return
+    const missingTerms = acceptTerms ? '' : 'Debes aceptar los Términos y condiciones y el Aviso de privacidad.'
+    setTermsError(missingTerms)
+    if (Object.keys(validationErrors).length > 0 || missingTerms) return
 
     setLoading(true)
     try {
@@ -62,6 +66,7 @@ export function RegisterPage() {
         email: values.email.trim().toLowerCase(),
         direccion: values.direccion.trim(),
         password: values.password,
+        acepta_terminos: true,
       })
       setRegisteredEmail(values.email.trim().toLowerCase())
     } catch (error) {
@@ -70,6 +75,7 @@ export function RegisterPage() {
       for (const [field, message] of Object.entries(details.fields)) {
         if (field in initialValues) serverErrors[field as RegistrationField] = message
       }
+      if (details.fields.acepta_terminos) setTermsError('Debes aceptar los Términos y condiciones y el Aviso de privacidad.')
       setErrors(serverErrors)
       setSubmitError(details.message)
     } finally {
@@ -148,6 +154,16 @@ export function RegisterPage() {
           )}
         </div>
         <p className="sl-st" style={{ animationDelay: '.6s', margin: '-14px 0 28px', fontSize: 13, color: '#5A7280' }}>Usa al menos 8 caracteres. La contraseña admite hasta 72 bytes.</p>
+
+        <div className="sl-st" style={{ animationDelay: '.62s', marginBottom: 24 }}>
+          <label className={`sl-terms${termsError ? ' bad' : ''}${acceptTerms ? ' on' : ''}`}>
+            <input type="checkbox" checked={acceptTerms} disabled={loading} aria-invalid={Boolean(termsError)} aria-describedby={termsError ? 'register-terms-error' : undefined}
+              onChange={(event) => { setAcceptTerms(event.target.checked); if (event.target.checked) setTermsError('') }} />
+            <span className="sl-terms-box" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span>
+            <span>He leído y acepto los <Link className="sl-lnk" to="/terminos" target="_blank" rel="noopener">Términos y condiciones</Link> y el <Link className="sl-lnk" to="/privacidad" target="_blank" rel="noopener">Aviso de privacidad</Link> de SELAVA.</span>
+          </label>
+          {termsError && <p id="register-terms-error" className="sl-terms-error" role="alert">{termsError}</p>}
+        </div>
 
         <div className="sl-st" style={{ animationDelay: '.64s' }}>
           <button className="sl-btn" type="submit" disabled={loading}>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Fragment } from 'react'
 import { PublicHeader } from '../components/PublicHeader'
 import { PublicGarmentPricesSection } from '../components/PublicGarmentPricesSection'
@@ -122,6 +123,8 @@ export function LandingPage() {
               {hasPromos && <a href="#promociones">Promociones</a>}
               <a href="#nosotros">Nosotros</a>
               <a href="#contacto">Contacto</a>
+              <Link to="/terminos">Términos</Link>
+              <Link to="/privacidad">Privacidad</Link>
             </nav>
             <span>© {new Date().getFullYear()} SeLava</span>
           </div>

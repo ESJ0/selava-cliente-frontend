@@ -1,3 +1,4 @@
+import { LegalPage } from '../pages/LegalPage'
 import { useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { ClientLayout } from '../layouts/ClientLayout'
@@ -26,6 +27,8 @@ const standaloneTitles: Record<string, string> = {
   '/recuperar-contrasena': 'Recuperar contraseña',
   '/restablecer-contrasena': 'Nueva contraseña',
   '/registro': 'Crear cuenta',
+  '/terminos': 'Términos y condiciones',
+  '/privacidad': 'Aviso de privacidad',
   '/pagos': 'Mis pagos',
   '/mi-perfil': 'Mi perfil',
 }
@@ -47,6 +50,8 @@ export function AppRoutes() {
       <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
       <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
       <Route path="/registro" element={<RegisterPage />} />
+      <Route path="/terminos" element={<LegalPage kind="terminos" />} />
+      <Route path="/privacidad" element={<LegalPage kind="privacidad" />} />
       <Route element={<ProtectedClientRoute />}>
         <Route element={<ClientLayout />}>
           <Route path="/inicio" element={<HomePage />} />

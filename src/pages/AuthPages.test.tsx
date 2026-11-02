@@ -63,15 +63,31 @@ describe('autenticación de clientes', () => {
     await user.type(screen.getByLabelText('Dirección (opcional)'), 'Zona 1')
     await user.type(screen.getByLabelText('Contraseña'), 'secreto-seguro')
     await user.type(screen.getByLabelText('Confirmar contraseña'), 'secreto-seguro')
+    await user.click(screen.getByRole('checkbox', { name: /acepto los Términos y condiciones/ }))
     await user.click(screen.getByRole('button', { name: 'Crear cuenta' }))
 
     await waitFor(() => expect(registerClientMock).toHaveBeenCalledWith({
-      nombre: 'Ana', apellido: 'López', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', password: 'secreto-seguro',
+      nombre: 'Ana', apellido: 'López', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', password: 'secreto-seguro', acepta_terminos: true,
     }))
     expect(await screen.findByRole('heading', { name: '¡Cuenta creada!' })).toBeInTheDocument()
     await user.click(screen.getByRole('link', { name: 'Ir a iniciar sesión' }))
     expect(screen.getByRole('heading', { name: 'Hola de nuevo.' })).toBeInTheDocument()
     expect(screen.getByLabelText('Correo electrónico')).toHaveValue('ana@example.com')
+  })
+
+  it('exige aceptar los términos y condiciones antes de crear la cuenta', async () => {
+    const user = userEvent.setup()
+    renderRoute('/registro')
+    await user.type(screen.getByLabelText('Nombre'), 'Ana')
+    await user.type(screen.getByLabelText('Apellido'), 'López')
+    await user.type(screen.getByLabelText('Teléfono'), '5555-1234')
+    await user.type(screen.getByLabelText('Correo electrónico'), 'ana@example.com')
+    await user.type(screen.getByLabelText('Contraseña'), 'secreto-seguro')
+    await user.type(screen.getByLabelText('Confirmar contraseña'), 'secreto-seguro')
+    await user.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Debes aceptar los Términos y condiciones y el Aviso de privacidad.')
+    expect(registerClientMock).not.toHaveBeenCalled()
+    expect(screen.getByRole('link', { name: 'Términos y condiciones' })).toHaveAttribute('href', '/terminos')
   })
 
   it('muestra los errores de duplicado devueltos por el backend', async () => {
@@ -86,6 +102,7 @@ describe('autenticación de clientes', () => {
     await user.type(screen.getByLabelText('Correo electrónico'), 'ana@example.com')
     await user.type(screen.getByLabelText('Contraseña'), 'secreto-seguro')
     await user.type(screen.getByLabelText('Confirmar contraseña'), 'secreto-seguro')
+    await user.click(screen.getByRole('checkbox', { name: /acepto los Términos y condiciones/ }))
     await user.click(screen.getByRole('button', { name: 'Crear cuenta' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe una cuenta con este correo.')
@@ -157,5 +174,15 @@ describe('autenticación de clientes', () => {
     renderRoute('/recuperar-contrasena?token=token-seguro')
     expect(await screen.findByLabelText('Nueva contraseña')).toBeInTheDocument()
     await waitFor(() => expect(validatePasswordResetTokenMock).toHaveBeenCalledWith('token-seguro', expect.any(AbortSignal)))
+  })
+
+  it('publica los Términos y condiciones con la retención de 30 días y el Aviso de privacidad', async () => {
+    const user = userEvent.setup()
+    renderRoute('/terminos')
+    expect(screen.getByRole('heading', { level: 1, name: /^Términos y condiciones/ })).toBeInTheDocument()
+    expect(screen.getByText(/Guardamos las prendas listas durante 30 días calendario/)).toBeInTheDocument()
+    expect(document.title).toBe('Términos y condiciones | SELAVA')
+    await user.click(screen.getByRole('link', { name: 'Ver Aviso de privacidad →' }))
+    expect(screen.getByRole('heading', { level: 1, name: /^Aviso de privacidad/ })).toBeInTheDocument()
   })
 })

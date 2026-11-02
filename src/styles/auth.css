@@ -148,3 +148,18 @@ button.sl-lnk { border: 0; background: transparent; font: inherit; font-size: 15
 @media (prefers-reduced-motion: reduce) {
   .sl-auth *, .sl-auth *::before, .sl-auth *::after { animation: none !important; transition: none !important; }
 }
+
+/* Casilla de aceptación de términos */
+.sl-terms { position: relative; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; border: 1.5px solid #DCE7EC; background: #fff; font-size: 14px; line-height: 1.5; color: #3E5866; cursor: pointer; transition: border-color .25s, background .25s, box-shadow .25s; }
+.sl-terms:hover { border-color: #5BC3EC; }
+.sl-terms.on { border-color: #0E9BD6; background: #F3FAFE; }
+.sl-terms.bad { border-color: #C8401F; background: #FFF8F5; }
+.sl-terms input { position: absolute; opacity: 0; width: 22px; height: 22px; margin: 0; left: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; }
+.sl-terms input:focus-visible + .sl-terms-box { box-shadow: 0 0 0 4px rgba(14,155,214,.3); }
+.sl-terms-box { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-top: 1px; border-radius: 7px; border: 2px solid #9DB3BE; background: #fff; color: transparent; margin-top: 0; transition: all .25s cubic-bezier(.2,1.4,.4,1); }
+.sl-terms.on .sl-terms-box { border-color: #0A2433; background: #0A2433; color: #FFC93C; transform: scale(1.06); }
+.sl-terms-error { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: #C8401F; }
+.sl-auth-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.sl-legal-links { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #9DB3BE; }
+.sl-auth .sl-legal-links a { color: #5A7280; text-decoration: none; }
+.sl-auth .sl-legal-links a:hover { color: #06709F; text-decoration: underline; }

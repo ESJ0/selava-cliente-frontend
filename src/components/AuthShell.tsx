@@ -21,10 +21,13 @@ export function AuthShell({ panel, children }: AuthShellProps) {
         <div id="contenido-auth" className="sl-auth-body">
           <div className="sl-auth-content">{children}</div>
         </div>
-        <Link className="sl-lnk sl-back sl-st" to="/" style={{ animationDelay: wide ? '.76s' : '.7s' }}>
-          <svg className="sl-arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
-          Volver al inicio
-        </Link>
+        <div className="sl-auth-foot sl-st" style={{ animationDelay: wide ? '.76s' : '.7s' }}>
+          <Link className="sl-lnk sl-back" to="/">
+            <svg className="sl-arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+            Volver al inicio
+          </Link>
+          <nav className="sl-legal-links" aria-label="Documentos legales"><Link to="/terminos">Términos</Link><span aria-hidden="true">·</span><Link to="/privacidad">Privacidad</Link></nav>
+        </div>
       </main>
       <Panel />
     </div>
