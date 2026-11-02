@@ -134,8 +134,9 @@ export function OrdersPage() {
   const changeFilters = (value: HistoryFilterValue) => { setFilters(value); setPage(1) }
   const clear = () => changeFilters(EMPTY_HISTORY_FILTERS)
   const summary = active.data?.resumen ?? history.data?.resumen
-  const activeOrders = active.data?.pedidos ?? []
-  const historyOrders = history.data?.pedidos ?? []
+  // Defensa en el cliente: un pedido finalizado o cancelado nunca se muestra como activo (y viceversa).
+  const activeOrders = (active.data?.pedidos ?? []).filter(isOrderInProcess)
+  const historyOrders = (history.data?.pedidos ?? []).filter((order) => !isOrderInProcess(order))
   const filtered = hasHistoryFilters(filters)
   const historyCount = summary?.historial ?? history.data?.total ?? 0
   // Se decide con el resumen del servidor (no depende de filtros) para no desmontar los filtros al limpiarlos.
