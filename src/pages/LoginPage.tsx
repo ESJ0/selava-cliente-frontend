@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { adminHandoffURL, authErrorDetails, loginUnified } from '../api/clientAuth'
 import { AuthShell } from '../components/AuthShell'
+import { SessionScreen } from '../components/SessionScreen'
 import { ArrowRight, AuthField, AuthHeading, AuthNote, Spinner } from '../components/auth/AuthParts'
 import { useClientSession } from '../store/session'
 import { validateLogin } from '../utils/clientAuthValidation'
@@ -15,6 +16,7 @@ interface LoginLocationState {
 export function LoginPage() {
   const location = useLocation()
   const navigate = useNavigate()
+  const [entering, setEntering] = useState(false)
   const state = location.state as LoginLocationState | null
   const session = useClientSession((current) => current.session)
   const setSession = useClientSession((current) => current.setSession)
@@ -37,6 +39,9 @@ export function LoginPage() {
     setLoading(true)
     try {
       const result = await loginUnified(email.trim().toLowerCase(), password)
+      // Breve pantalla de bienvenida con el logo antes de entrar.
+      setEntering(true)
+      await new Promise((resolve) => window.setTimeout(resolve, import.meta.env.MODE === 'test' ? 0 : 900))
       if (result.kind === 'admin') {
         window.location.assign(adminHandoffURL(result.token))
         return
@@ -48,6 +53,7 @@ export function LoginPage() {
       const details = authErrorDetails(error, 'No pudimos iniciar sesión. Inténtalo de nuevo.')
       setErrors({ email: details.fields.email, password: details.fields.password })
       setSubmitError(details.message)
+      setEntering(false)
     } finally {
       setLoading(false)
     }
@@ -55,6 +61,7 @@ export function LoginPage() {
 
   return (
     <AuthShell panel="login">
+      {entering && <SessionScreen title="Iniciando sesión" text="Preparando tu espacio en SELAVA…" />}
       <AuthHeading kicker="Portal SELAVA" title={<>Hola de{' '}<br />nuevo.</>} lead="Consulta tus pedidos y mantente al día con el cuidado de tus prendas." />
       {state?.registrationCompleted && <AuthNote tone="ok">Tu cuenta fue creada. Ya puedes iniciar sesión.</AuthNote>}
       {submitError && <AuthNote tone="err">{submitError}</AuthNote>}
