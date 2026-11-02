@@ -549,3 +549,5 @@
 /* capa de avisos montada en body (fuera del backdrop-filter de la cabecera) */
 .cp-portal-layer { font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif; }
 @media (prefers-reduced-motion: reduce) { .cp-portal-layer * { animation: none !important; } }
+.cp-legal-note { margin: 4px 4px 0; font-size: 13px; line-height: 1.5; color: #5A7280; }
+.cp-portal .cp-legal-note a { color: #06709F; font-weight: 600; }

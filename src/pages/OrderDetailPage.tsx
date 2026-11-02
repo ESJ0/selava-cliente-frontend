@@ -224,6 +224,7 @@ export function OrderDetailPage() {
             <span><small>¿Dudas con este pedido?</small>Llamar al {SELAVA_PHONE}</span>
             <span className="cp-ca"><PhoneIcon size={20} /></span>
           </a>
+          <p className="cp-st cp-legal-note" style={delay(.55)}>Este servicio se rige por nuestros <Link to="/terminos">Términos y condiciones</Link>. Las prendas listas se guardan 30 días.</p>
         </div>
       </div>
     </div>

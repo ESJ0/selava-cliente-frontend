@@ -16,7 +16,7 @@ function response(config: InternalAxiosRequestConfig, data: unknown, status = 20
 }
 
 it('registra el perfil y las credenciales con el contrato del backend', async () => {
-  const payload = { nombre: 'Ana', apellido: 'López', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', password: 'secreto-seguro' }
+  const payload = { nombre: 'Ana', apellido: 'López', telefono: '5555-1234', email: 'ana@example.com', direccion: 'Zona 1', password: 'secreto-seguro', acepta_terminos: true }
   const apiResponse = { cliente: { id: 4, nombre: 'Ana', apellido: 'López', telefono: '5555-1234', email: 'ana@example.com', activo: true } }
   api.defaults.adapter = (async (config) => {
     expect(config.url).toBe('/auth/clientes/registro')
