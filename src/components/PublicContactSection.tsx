@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { mapsDirectionsHref, mapsEmbedSrc, phoneHref, publicSiteContent, wazeHref, whatsappHref } from '../content/publicSite'
 
 const pad = (hour: number) => `${String(hour).padStart(2, '0')}:00`
+/** Hora legible en formato de 12 horas: 9:00 a. m., 8:00 p. m. */
+const clock = (hour: number) => `${hour % 12 || 12}:00 ${hour < 12 ? 'a. m.' : 'p. m.'}`
+const rangeLabel = (names: string[]) => names.length === 1 ? names[0] : names.length === 2 ? `${names[0]} y ${names[1].toLowerCase()}` : `${names[0]} a ${names[names.length - 1].toLowerCase()}`
 const svg = (children: React.ReactNode, size = 22, width = 1.9) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
 const icons = {
   Facebook: <path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V10H6.5v3.5H9V21h3.5v-7.5H15l.5-3.5h-3V7a1 1 0 0 1 1-1H15z" />,
@@ -35,6 +38,13 @@ export function PublicContactSection({ number, now }: { number: string; now: num
   const open = hour >= today.open && hour < today.close
   const openText = open ? `Abierto ahora · cierra a las ${pad(today.close)}` : hour < today.open ? `Cerrado · abre hoy a las ${pad(today.open)}` : `Cerrado · abre mañana a las ${pad(next.open)}`
   const address = contact.addressLines.join(' ')
+  // Agrupa días consecutivos con el mismo horario: "Lunes a viernes", "Sábado y domingo".
+  const groups = contact.week.reduce<{ label: string; days: number[]; open: number; close: number }[]>((acc, item, index) => {
+    const last = acc[acc.length - 1]
+    if (last && last.open === item.open && last.close === item.close) last.days.push(index)
+    else acc.push({ label: '', days: [index], open: item.open, close: item.close })
+    return acc
+  }, []).map((group) => ({ ...group, label: rangeLabel(group.days.map((index) => contact.week[index].day)) }))
 
   async function copy() {
     try { await navigator.clipboard?.writeText(address) } catch { /* el navegador no permite copiar */ }
@@ -81,11 +91,22 @@ export function PublicContactSection({ number, now }: { number: string; now: num
             </div>
 
             <div className="sl-ct-card sl-ct-hours sl-ct-in">
-              <div className="sl-ct-hours-head"><span className="sl-ct-kicker">{svg(icons.Clock, 16, 2)}Horario</span><span className="sl-ct-today">Hoy {pad(today.open)} – {pad(today.close)}</span></div>
+              <div className="sl-ct-hours-head"><span className="sl-ct-kicker">{svg(icons.Clock, 16, 2)}Horario de atención</span></div>
               <ul>
-                {contact.week.map((item, index) => <li key={item.day} className={index === day ? 'today' : undefined} aria-current={index === day ? 'date' : undefined}>
-                  <span>{item.day.slice(0, 3)}</span><strong>{item.open}–{item.close}</strong>
-                </li>)}
+                {groups.map((group) => {
+                  const isToday = group.days.includes(day)
+                  return <li key={group.label} className={isToday ? 'today' : undefined} aria-current={isToday ? 'date' : undefined}>
+                    <div className="sl-ct-hgroup">
+                      <span className="sl-ct-hlabel">{group.label}{isToday && <em>Hoy</em>}</span>
+                      <span className="sl-ct-hdays" aria-hidden="true">{group.days.map((index) => <i key={index} className={index === day ? 'on' : undefined}>{contact.week[index].day[0]}</i>)}</span>
+                    </div>
+                    <div className="sl-ct-htime">
+                      <span><small>Abre</small>{clock(group.open)}</span>
+                      <span className="sl-ct-hline" aria-hidden="true" />
+                      <span><small>Cierra</small>{clock(group.close)}</span>
+                    </div>
+                  </li>
+                })}
               </ul>
             </div>
           </div>
