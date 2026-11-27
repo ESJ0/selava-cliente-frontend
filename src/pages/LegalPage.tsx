@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { BrandMark } from '../components/BrandMark'
+import { PublicFooter } from '../components/PublicFooter'
 import { LEGAL_UPDATED, LEGAL_VERSION, PRIVACY, TERMS } from '../content/legal'
 import '../styles/legal.css'
 
@@ -52,12 +53,7 @@ export function LegalPage({ kind }: { kind: 'terminos' | 'privacidad' }) {
         </article>
       </main>
 
-      <footer className="lg-foot">
-        <div className="lg-wrap lg-foot-inner">
-          <span>© {new Date().getFullYear()} SELAVA · Lavandería y Dry Clean</span>
-          <nav aria-label="Enlaces del pie"><Link to="/">Inicio</Link><Link to="/terminos">Términos</Link><Link to="/privacidad">Privacidad</Link></nav>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }

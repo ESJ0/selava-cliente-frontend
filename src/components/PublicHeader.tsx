@@ -1,25 +1,33 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { BrandMark } from './BrandMark'
+import { PublicIcon } from './PublicIcon'
 
 const links = [
-  { href: '#precios', label: 'Precios' },
-  { href: '#promociones', label: 'Promociones' },
-  { href: '#nosotros', label: 'Nosotros' },
-  { href: '#contacto', label: 'Contacto' },
+  { to: '/precios', label: 'Precios' },
+  { to: '/promociones', label: 'Promociones' },
+  { to: '/nosotros', label: 'Nosotros' },
+  { to: '/contacto', label: 'Contacto' },
 ]
 
-export function PublicHeader({ showPromotions = false }: { showPromotions?: boolean }) {
+export function PublicHeader() {
+  const { pathname } = useLocation()
+  const [open, setOpen] = useState(false)
+  // Cierra el menú del celular al cambiar de página.
+  useEffect(() => setOpen(false), [pathname])
+
   return (
-    <header className="sl-header">
-      <nav className="sl-wrap sl-nav" aria-label="Navegación del sitio público">
-        <a href="#inicio" className="sl-brand" aria-label="SeLava, inicio"><BrandMark /></a>
-        <div className="sl-navlinks">
-          {links.filter(({ href }) => showPromotions || href !== '#promociones').map(({ href, label }) => <a key={href} className="sl-navlink" href={href}>{label}</a>)}
+    <header className={`sl-header${open ? ' is-open' : ''}`}>
+      <nav className="sl-wrap sl-nav" aria-label="Navegación del sitio">
+        <Link to="/" className="sl-brand" aria-label="SeLava, inicio"><BrandMark /></Link>
+        <div className="sl-navlinks" id="sl-menu">
+          {links.map(({ to, label }) => <NavLink key={to} className="sl-navlink" to={to}>{label}</NavLink>)}
+          <Link className="sl-login sl-login-menu" to="/login"><PublicIcon name="user" size={18} />Iniciar sesión</Link>
         </div>
-        <Link className="sl-login" to="/login">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>
-          Iniciar sesión
-        </Link>
+        <Link className="sl-login" to="/login"><PublicIcon name="user" size={18} />Iniciar sesión</Link>
+        <button className="sl-burger" type="button" aria-expanded={open} aria-controls="sl-menu" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setOpen((value) => !value)}>
+          <PublicIcon name={open ? 'close' : 'menu'} size={22} width={2} />
+        </button>
       </nav>
     </header>
   )

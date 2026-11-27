@@ -65,8 +65,8 @@ export function PublicGarmentPricesSection() {
     <section id="precios" className="sl-wrap sl-prices" aria-labelledby="garment-prices-title">
       <div className="sl-rv sl-prices-head">
         <div>
-          <p className="sl-eyebrow">01 — Precios</p>
-          <h2 id="garment-prices-title" className="sl-disp sl-h2">Precios por{' '}<br />tipo de prenda</h2>
+          <p className="sl-eyebrow">Precios</p>
+          <h1 id="garment-prices-title" className="sl-disp sl-h2">Precios por{' '}<br />tipo de prenda</h1>
         </div>
         <p>Consulta el precio de cada tipo de prenda. Los servicios asociados no añaden recargos.</p>
       </div>
