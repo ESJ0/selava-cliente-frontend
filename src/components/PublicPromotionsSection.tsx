@@ -13,7 +13,7 @@ const amount = (value: number) => value % 1 ? value.toFixed(2) : String(value)
 const measure = (value: number, mode: PublicPromotion['modalidad_cobro']) => `${Math.round(value * 1000) / 1000} ${mode === 'LIBRA' ? 'lb' : mode === 'METRO' ? 'm' : value === 1 ? 'unidad' : 'u'}`
 const longDate = (value: string) => { const date = new Date(value); return `${date.getDate()} de ${MONTHS[date.getMonth()]} de ${date.getFullYear()}` }
 
-export function PublicPromotionsSection({ promotions, types, number, now }: { promotions: PublicPromotion[]; types: PublicGarmentType[]; number: string; now: number }) {
+export function PublicPromotionsSection({ promotions, types, now }: { promotions: PublicPromotion[]; types: PublicGarmentType[]; now: number }) {
   if (!promotions.length) return null
   const ends = promotions.map((promo) => Date.parse(promo.fecha_fin)).filter(Number.isFinite)
   const nearest = Math.min(...ends)
@@ -26,8 +26,8 @@ export function PublicPromotionsSection({ promotions, types, number, now }: { pr
       <div className="sl-wrap sl-promos-inner">
         <div className="sl-rv sl-promos-head">
           <div>
-            <p className="sl-eyebrow">{number} — Promociones</p>
-            <h2 id="promos-title" className="sl-disp sl-h2">Paga menos por<br />lavar más.</h2>
+            <p className="sl-eyebrow">Promociones</p>
+            <h1 id="promos-title" className="sl-disp sl-h2">Paga menos por<br />lavar más.</h1>
           </div>
           <div className="sl-countdown">
             <span className="sl-cdn sl-disp">{daysLeft}</span>

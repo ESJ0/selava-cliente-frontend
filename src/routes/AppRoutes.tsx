@@ -5,6 +5,8 @@ import { ClientLayout } from '../layouts/ClientLayout'
 import { ProtectedClientRoute } from '../components/ProtectedClientRoute'
 import { HomePage } from '../pages/HomePage'
 import { LandingPage } from '../pages/LandingPage'
+import { PublicAboutPage, PublicContactPage, PublicPricesPage, PublicPromotionsPage } from '../pages/PublicPages'
+import { PublicLayout } from '../layouts/PublicLayout'
 import { LoginPage } from '../pages/LoginPage'
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '../pages/ResetPasswordPage'
@@ -22,6 +24,10 @@ const upcoming = [
 
 const standaloneTitles: Record<string, string> = {
   '/': 'Inicio',
+  '/precios': 'Precios',
+  '/promociones': 'Promociones',
+  '/nosotros': 'Nosotros',
+  '/contacto': 'Contacto',
   '/inicio': 'Mi portal',
   '/login': 'Iniciar sesión',
   '/recuperar-contrasena': 'Recuperar contraseña',
@@ -45,7 +51,13 @@ export function AppRoutes() {
   }, [pathname])
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/precios" element={<PublicPricesPage />} />
+        <Route path="/promociones" element={<PublicPromotionsPage />} />
+        <Route path="/nosotros" element={<PublicAboutPage />} />
+        <Route path="/contacto" element={<PublicContactPage />} />
+      </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
       <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />

@@ -1,12 +1,13 @@
-import { Link } from 'react-router-dom'
-import { Fragment } from 'react'
-import { PublicHeader } from '../components/PublicHeader'
-import { PublicGarmentPricesSection } from '../components/PublicGarmentPricesSection'
-import { PublicContactSection } from '../components/PublicContactSection'
-import { PublicPromotionsSection } from '../components/PublicPromotionsSection'
+import { Fragment, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { PublicIcon, type PublicIconName } from '../components/PublicIcon'
 import { phoneHref as toPhoneHref, publicSiteContent } from '../content/publicSite'
 import { useNow } from '../hooks/useNow'
 import { usePublicPromotions } from '../hooks/usePublicPromotions'
+import { openStatus } from '../utils/openingHours'
+
+/** Enlaces antiguos de la landing (/#precios) llevan a su página. */
+const legacyHashes: Record<string, string> = { '#precios': '/precios', '#promociones': '/promociones', '#nosotros': '/nosotros', '#contacto': '/contacto' }
 
 const shirt = 'M20 2 L4 12 L10 24 L16 20 L16 54 L48 54 L48 20 L54 24 L60 12 L44 2 C40 8 24 8 20 2 Z'
 
@@ -43,93 +44,71 @@ function Drum() {
 }
 
 export function LandingPage() {
-  const { about, contact, ribbon } = publicSiteContent
+  const { contact, ribbon } = publicSiteContent
   const phoneHref = toPhoneHref(contact.phone)
   const now = useNow()
-  const { promotions, types } = usePublicPromotions()
-  const hasPromos = promotions.length > 0
-  const n = (index: number) => String(index).padStart(2, '0')
+  const { promotions } = usePublicPromotions()
+  const status = openStatus(now)
+  const { hash } = useLocation()
+  const navigate = useNavigate()
+  useEffect(() => { if (legacyHashes[hash]) navigate(legacyHashes[hash], { replace: true }) }, [hash, navigate])
+
   const ribbonGroup = (hidden: boolean) => (
     <span className="sl-ribbon-group" aria-hidden={hidden || undefined}>
       {ribbon.map((item) => <Fragment key={item}>{item} <i>✦</i></Fragment>)}
     </span>
   )
+  const cards: { to: string; icon: PublicIconName; kicker: string; title: string; text: string; tone: string }[] = [
+    { to: '/precios', icon: 'tag', kicker: 'Precios', title: 'Cuánto cuesta cada prenda', text: 'Tarifas por unidad, por libra y por metro. Los servicios no añaden recargos.', tone: 'sky' },
+    { to: '/promociones', icon: 'ticket', kicker: 'Promociones', title: promotions.length ? `${promotions.length} ${promotions.length === 1 ? 'paquete vigente' : 'paquetes vigentes'}` : 'Paquetes con descuento', text: 'Paga menos por lavar más con nuestros paquetes de temporada.', tone: 'sun' },
+    { to: '/nosotros', icon: 'heart', kicker: 'Nosotros', title: 'Cuidado profesional desde 2019', text: 'Equipo italiano, insumos ecológicos y un equipo capacitado.', tone: 'mint' },
+    { to: '/contacto', icon: 'pin', kicker: 'Visítanos', title: status.text, text: `${contact.placeDetail}, ${contact.place}. Mira el mapa y el horario.`, tone: status.open ? 'open' : 'navy' },
+  ]
 
   return (
-    <div className="sl-landing">
-      <a className="skip-link" href="#contenido-publico">Saltar al contenido</a>
-      <PublicHeader showPromotions={hasPromos} />
-      <main id="contenido-publico">
-        <section id="inicio" className="sl-wrap sl-hero-section" aria-labelledby="landing-title">
-          <div className="sl-hero">
-            <div>
-              <p className="sl-fade sl-kicker">{publicSiteContent.eyebrow}</p>
-              <h1 id="landing-title" className="sl-disp">
-                <span className="sl-line"><span>Tu ropa <span className="sl-foam">limpia,<svg viewBox="0 0 300 30" preserveAspectRatio="none" aria-hidden="true"><path d="M4 18 C 40 4, 70 28, 110 14 S 180 4, 220 16 S 280 22, 296 10" fill="none" stroke="#FFC93C" strokeWidth="9" strokeLinecap="round" /></svg></span>{' '}</span></span>
-                <span className="sl-line"><span style={{ animationDelay: '.12s' }}>cuidada y lista{' '}</span></span>
-                <span className="sl-line"><span style={{ animationDelay: '.24s', color: '#0E9BD6' }}>cuando la necesitas.</span></span>
-              </h1>
-              <p className="sl-fade sl-hero-lead">{publicSiteContent.heroDescription}</p>
-              <div className="sl-fade sl-hero-actions">
-                <a className="sl-cta" href="#precios">Ver precios por prenda
-                  <svg className="sl-arr" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v16M5 13l7 7 7-7" /></svg>
-                </a>
-                <a className="sl-call" href={phoneHref}>o llámanos al <strong>{contact.phone}</strong></a>
-              </div>
+    <>
+      <section className="sl-wrap sl-hero-section" aria-labelledby="landing-title">
+        <div className="sl-hero">
+          <div>
+            <p className="sl-fade sl-kicker">{publicSiteContent.eyebrow}</p>
+            <h1 id="landing-title" className="sl-disp">
+              <span className="sl-line"><span>Tu ropa <span className="sl-foam">limpia,<svg viewBox="0 0 300 30" preserveAspectRatio="none" aria-hidden="true"><path d="M4 18 C 40 4, 70 28, 110 14 S 180 4, 220 16 S 280 22, 296 10" fill="none" stroke="#FFC93C" strokeWidth="9" strokeLinecap="round" /></svg></span>{' '}</span></span>
+              <span className="sl-line"><span style={{ animationDelay: '.12s' }}>cuidada y lista{' '}</span></span>
+              <span className="sl-line"><span style={{ animationDelay: '.24s', color: '#0E9BD6' }}>cuando la necesitas.</span></span>
+            </h1>
+            <p className="sl-fade sl-hero-lead">{publicSiteContent.heroDescription}</p>
+            <div className="sl-fade sl-hero-actions">
+              <Link className="sl-cta" to="/precios">Ver precios por prenda
+                <svg className="sl-arr" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </Link>
+              <a className="sl-call" href={phoneHref}>o llámanos al <strong>{contact.phone}</strong></a>
             </div>
-            <Drum />
           </div>
-        </section>
-
-        <div className="sl-ribbon" aria-hidden="true">
-          <div className="sl-marquee sl-disp">{ribbonGroup(false)}{ribbonGroup(true)}</div>
+          <Drum />
         </div>
+      </section>
 
-        <PublicGarmentPricesSection />
+      <div className="sl-ribbon" aria-hidden="true">
+        <div className="sl-marquee sl-disp">{ribbonGroup(false)}{ribbonGroup(true)}</div>
+      </div>
 
-        <PublicPromotionsSection promotions={promotions} types={types} number={n(2)} now={now} />
-
-        <section id="nosotros" className="sl-about-section" aria-labelledby="about-title">
-          <div className="sl-wrap sl-about">
-            <div className="sl-rv">
-              <p className="sl-eyebrow">{n(hasPromos ? 3 : 2)} — Sobre nosotros</p>
-              <h2 id="about-title" className="sl-disp">{about.title} <span>{about.highlight}</span></h2>
-              <p className="sl-about-lead">{about.description}</p>
-            </div>
-            <ol className="sl-milestones">
-              {about.milestones.map((milestone) => (
-                <li key={milestone.year} className="sl-rv">
-                  <span className={`sl-disp sl-milestone-year${milestone.current ? ' is-now' : ''}`}>{milestone.year}</span>
-                  <div>
-                    <h3 className="sl-disp">{milestone.title}</h3>
-                    <p>{milestone.description}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <PublicContactSection number={n(hasPromos ? 4 : 3)} now={now} />
-      </main>
-
-      <footer className="sl-footer">
-        <div className="sl-wrap sl-footer-inner">
-          <p className="sl-disp sl-footer-word" aria-hidden="true">SeLava</p>
-          <div className="sl-footer-row">
-            <span>Tu ropa en buenas manos.</span>
-            <nav aria-label="Navegación secundaria">
-              <a href="#precios">Precios</a>
-              {hasPromos && <a href="#promociones">Promociones</a>}
-              <a href="#nosotros">Nosotros</a>
-              <a href="#contacto">Contacto</a>
-              <Link to="/terminos">Términos</Link>
-              <Link to="/privacidad">Privacidad</Link>
-            </nav>
-            <span>© {new Date().getFullYear()} SeLava</span>
-          </div>
+      <section className="sl-wrap sl-explore" aria-labelledby="explore-title">
+        <div className="sl-explore-head">
+          <p className="sl-eyebrow">Conoce SeLava</p>
+          <h2 id="explore-title" className="sl-disp sl-h2">¿Qué estás <span>buscando?</span></h2>
         </div>
-      </footer>
-    </div>
+        <div className="sl-explore-grid">
+          {cards.map((card) => (
+            <Link key={card.to} to={card.to} className={`sl-xcard ${card.tone}`}>
+              <span className="sl-xcard-ic"><PublicIcon name={card.icon} size={24} /></span>
+              <span className="sl-xcard-k">{card.kicker}</span>
+              <span className="sl-disp sl-xcard-t">{card.title}</span>
+              <span className="sl-xcard-p">{card.text}</span>
+              <span className="sl-xcard-go">Ver más<PublicIcon name="right" size={18} width={2.2} /></span>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </>
   )
 }
